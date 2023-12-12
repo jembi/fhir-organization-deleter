@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   post-data-service:
-    image: node:erbium-alpine
+    image: node:18-alpine
     networks:
       openhim-mongo:
       elastic:
