@@ -38,7 +38,7 @@ export async function processMongoData(patientIds) {
     processBundle(transaction._id.toString(), fhirRequest, patientIds);
   }
 
-  console.log(`processed ${processedCounter} mongo requests`);
+  console.log(`${new Date().toISOString()} - processed ${processedCounter} mongo requests`);
   console.log('done');
 }
 

@@ -7,14 +7,6 @@ outputFileStream.on('error', (err) => {
   process.exit(1);
 });
 
-// const client = new Client({
-//   node: 'http://elasticsearch_analytics-datastore-elastic-search-01:9200',
-//   auth: {
-//     username: 'elastic',
-//     password: '2*yq1xR$WKK2'
-//   },
-// });
-
 const client = new Client({
   node: process.env.ELASTIC_URL,
   auth: {
@@ -29,6 +21,7 @@ export async function extractPatientIds(healthFacilityId) {
   }
 
   let processCounter = 0;
+  console.log(`${new Date().toISOString()} - Processing elastic patients`)
   let result = await client.search({
     index: 'fhir-enrich-reports',
     from: 0,
@@ -75,7 +68,7 @@ export async function extractPatientIds(healthFacilityId) {
 
   } while (totalHits !== processCounter);
 
-  console.log('done elastic extracting');
+  console.log(`${new Date().toISOString()} - done elastic extracting`);
 }
 
 export function disconnect() {

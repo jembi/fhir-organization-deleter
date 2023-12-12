@@ -39,7 +39,7 @@ export function processBundle(transactionId, bundle, patientIds) {
 export async function deleteResource(resource) {
   try {
     await axios.delete(`http://${process.env.HAPI_PROXY_URL}:${process.env.HAPI_PROXY_PORT}/fhir/${resource}`);
-    console.log('DELETED: ', resource);
+    console.log(`${new Date().toISOString()} - DELETED: `, resource);
   } catch (err) {
     console.error(err);
     throw err;
