@@ -2,8 +2,6 @@ import { MongoClient } from 'mongodb';
 import { processBundle } from '../fhir/index.js';
 import { writeMalformedResource } from '../filesystem/index.js';
 
-// const client = new MongoClient('mongodb://mongo-1:27017,mongo-2:27017,mongo-3:27017/openhim?replicaSet=mongo-set');
-// const client = new MongoClient('mongodb://localhost:27017');
 const client = new MongoClient(process.env.MONGO_URL);
 
 export async function processMongoData(patientIds) {
