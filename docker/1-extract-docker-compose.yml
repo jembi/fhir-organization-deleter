@@ -16,6 +16,7 @@ services:
     volumes:
       - ../:/app
     environment:
+      FACILITY_ID: 'placeholder'
       MONGO_URL: 'mongodb://mongo-1:27017,mongo-2:27017,mongo-3:27017/openhim?replicaSet=mongo-set'
       ELASTIC_URL: 'http://elasticsearch_analytics-datastore-elastic-search-01:9200'
       ELASTIC_PASSWORD: 'dev_password_only'
