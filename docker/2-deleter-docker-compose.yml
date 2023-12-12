@@ -1,0 +1,24 @@
+version: '3.9'
+
+services:
+  post-data-service:
+    image: node:erbium-alpine
+    networks:
+      openhim:
+    deploy:
+      restart_policy:
+        condition: none
+      placement:
+        constraints:
+          - "node.labels.name==node-1"
+    command: sh -c "cd /app && npm run 1:extract"
+    volumes:
+      - ../:/app
+    environment:
+      HAPI_PROXY_URL: 'hapi-proxy'
+      HAPI_PROXY_PORT: 18080
+
+networks:
+  openhim:
+    name: openhim_public
+    external: true

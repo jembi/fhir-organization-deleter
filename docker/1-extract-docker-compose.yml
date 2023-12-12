@@ -1,0 +1,29 @@
+version: '3.9'
+
+services:
+  post-data-service:
+    image: node:erbium-alpine
+    networks:
+      openhim-mongo:
+      elastic:
+    deploy:
+      restart_policy:
+        condition: none
+      placement:
+        constraints:
+          - "node.labels.name==node-1"
+    command: sh -c "cd /app && npm run 1:extract"
+    volumes:
+      - ../:/app
+    environment:
+      MONGO_URL: 'mongodb://mongo-1:27017,mongo-2:27017,mongo-3:27017/openhim?replicaSet=mongo-set'
+      ELASTIC_URL: 'http://elasticsearch_analytics-datastore-elastic-search-01:9200'
+      ELASTIC_PASSWORD: 'dev_password_only'
+
+networks:
+  openhim-mongo:
+    name: openhim_mongo_public
+    external: true
+  elastic:
+    name: elastic_public
+    external: true

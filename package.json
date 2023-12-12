@@ -1,0 +1,20 @@
+{
+  "name": "organization-deleter",
+  "version": "1.0.0",
+  "description": "Scrap all data attached to an organization and then send delete requests to each resource",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "1:extract": "node 1-extract.js",
+    "1:extract:docker": "docker stack deploy -c ./docker/1-extract-docker-compose.yml organization-deleter",
+    "2:deleter": "node 1-extract.js",
+    "2:deleter:docker": "docker stack deploy -c ./docker/2-deleter-docker-compose.yml organization-deleter"
+  },
+  "author": "Arran Standish",
+  "license": "ISC",
+  "dependencies": {
+    "@elastic/elasticsearch": "^7.17.13",
+    "axios": "^1.6.2",
+    "mongodb": "^6.3.0"
+  }
+}
