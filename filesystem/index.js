@@ -79,6 +79,13 @@ export function writeMalformedResource(transactionId, resource) {
   malformedStream.write('\n\n');
 }
 
+export function writeSqlConflictResource(resource) {
+  if (!writeSqlConflictResource.writer)
+    writeSqlConflictResource.writer = fs.createWriteStream('./output/sqlconflicts.csv');
+  
+    writeSqlConflictResource.writer.write(`${resource}\n`);
+}
+
 export async function readElasticPatientIds() {
   return new Promise((resolve, reject) => {
     fs.readFile('./output/elastic-patients.csv', (err, data) => {
