@@ -1,4 +1,4 @@
-import { extractPatientIds, disconnect as elasticDisconnect } from './elastic/index.js';
+import { extractPatientIds } from './elastic/index.js';
 import { processMongoData, disconnect as mongoDisconnect } from './mongo/index.js';
 import { openWriteStreams, readElasticPatientIds } from './filesystem/index.js';
 
@@ -24,5 +24,4 @@ main()
   .catch(err => console.error(err))
   .finally(() => {
     mongoDisconnect();
-    elasticDisconnect();
   });

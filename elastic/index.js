@@ -70,7 +70,3 @@ export async function extractPatientIds(healthFacilityId) {
 
   console.log(`${new Date().toISOString()} - done elastic extracting`);
 }
-
-export function disconnect() {
-  client.disconnect();
-}
