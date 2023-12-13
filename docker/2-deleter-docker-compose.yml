@@ -11,7 +11,7 @@ services:
       placement:
         constraints:
           - "node.labels.name==node-1"
-    command: sh -c "cd /app && npm run 1:extract"
+    command: sh -c "cd /app && npm run 2:deleter"
     volumes:
       - ../:/app
     environment:
