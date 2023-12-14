@@ -14,18 +14,19 @@ function setupEnv() {
 
 // @TODO
 // once processed all patients
-// loop through all patient ids and delete fhir-enrich-report for patient
-// delete patient in hapi-fhir
-// delete organization
+// loop through all patient ids and delete fhir-enrich-report for patient /// report-${patientId}
+// delete patient in hapi-fhir /// DELETE /fhir/Patient/patientId
+// delete organization  /// DELETE /fhir/Organization/id
 
 async function main() {
   setupEnv();
-
   const healthFacilityId = process.env.FACILITY_ID;
+
+  console.log(`${new Date().toISOString()} - starting processing`);
   
   const cursor = await getCursor();
-  // if we have a cursor we must not extract from elastic (since we already did and are rerunning)
-  if (!cursor) await extractPatientIds(healthFacilityId);
+  if (cursor) console.log(`${new Date().toISOString()} - Found cursor ${cursor} resuming from there`);
+  else await extractPatientIds(healthFacilityId);
   
   let previousCursorFound = cursor === '';
   const patientIdReader = readline.createInterface({
@@ -44,6 +45,8 @@ async function main() {
   }
 
   await flushCursor('');
+
+  console.log(`${new Date().toISOString()} - finished processing`);
 }
 
 main()

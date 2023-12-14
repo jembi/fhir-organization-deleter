@@ -48,6 +48,7 @@ export async function deleteResources(patientId) {
     if (resources.length > 0) {
       await writePatientResourcesToFile(resources);
       try {
+        console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} fhir resources`);
         for (const resource of resources) {
           await deleteResource(resource);
         }
@@ -57,6 +58,7 @@ export async function deleteResources(patientId) {
       }
   
       try {
+        console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} elastic raw resources`);
         await deleteElasticRawResources(resources);
       } catch (err) {
         console.log('Failed to delete elastic data for patient: ', patientId);
@@ -79,7 +81,6 @@ async function deleteResource(resource) {
   try {
     await new Promise((resolve) => setTimeout(() => { resolve() }, 10));
     await axios.delete(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resource}`);
-    console.log(`${new Date().toISOString()} - DELETED: `, resource);
   } catch (err) {
     if (err.response && err.response.data) {
       console.error(JSON.stringify(err.response.data));
