@@ -2,11 +2,11 @@
   "name": "organization-deleter",
   "version": "1.0.0",
   "description": "Scrape all data attached to an organization and then send delete requests to each resource",
-  "main": "index.js",
+  "main": "1-delete.js",
   "type": "module",
   "scripts": {
-    "1:extract": "node 1-extract.js",
-    "1:extract:docker": "docker stack deploy -c ./docker/1-extract-docker-compose.yml organization-deleter",
+    "1:delete": "node 1-delete.js",
+    "1:delete:docker": "docker stack deploy -c ./docker/1-delete-docker-compose.yml organization-deleter",
     "2:deleter": "node 2-deleter.js",
     "2:deleter:docker": "docker stack deploy -c ./docker/2-deleter-docker-compose.yml organization-deleter"
   },

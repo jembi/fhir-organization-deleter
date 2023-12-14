@@ -43,7 +43,7 @@ async function main() {
     await deleteResources(patientId);
   }
 
-  await flushCursor();
+  await flushCursor('');
 }
 
 main()
