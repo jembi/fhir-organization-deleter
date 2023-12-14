@@ -45,21 +45,23 @@ export async function deleteResources(patientId) {
       resources.push(resourcePath);
     }
 
-    await writePatientResourcesToFile(resources);
-    try {
-      for (const resource of resources) {
-        await deleteResource(resource);
+    if (resources.length > 0) {
+      await writePatientResourcesToFile(resources);
+      try {
+        for (const resource of resources) {
+          await deleteResource(resource);
+        }
+      } catch (err) {
+        console.log('Failed to delete hapi-fhir data for patient: ', patientId);
+        throw err;
       }
-    } catch (err) {
-      console.log('Failed to delete hapi-fhir data for patient: ', patientId);
-      throw err;
-    }
-
-    try {
-      await deleteElasticRawResources(resources);
-    } catch (err) {
-      console.log('Failed to delete elastic data for patient: ', patientId);
-      throw err;
+  
+      try {
+        await deleteElasticRawResources(resources);
+      } catch (err) {
+        console.log('Failed to delete elastic data for patient: ', patientId);
+        throw err;
+      }
     }
 
     const nextLink = response.data.link.filter(link => link.relation === 'next');

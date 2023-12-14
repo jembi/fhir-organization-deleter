@@ -1,10 +1,10 @@
 import { Client } from '@elastic/elasticsearch'
 
 const client = new Client({
-  nodes: process.env.ELASTIC_URL,
+  nodes: process.env.ELASTIC_URL || 'http://localhost:9201',
   auth: {
     username: 'elastic',
-    password: process.env.ELASTIC_PASSWORD
+    password: process.env.ELASTIC_PASSWORD || 'dev_password_only'
   },
 });
 
