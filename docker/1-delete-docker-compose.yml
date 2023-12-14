@@ -1,10 +1,10 @@
 version: '3.9'
 
 services:
-  extract-data:
+  delete-data:
     image: node:18-alpine
     networks:
-      openhim:
+      hapi-fhir:
       elastic:
     deploy:
       restart_policy:
@@ -23,8 +23,8 @@ services:
       HAPI_FHIR_PORT: 8080
 
 networks:
-  openhim:
-    name: openhim_public
+  hapi-fhir:
+    name: hapi-fhir_public
     external: true
   elastic:
     name: elastic_public
