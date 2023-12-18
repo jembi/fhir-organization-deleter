@@ -1,9 +1,11 @@
 import fs from 'fs';
 import readline from 'readline';
 
+const PATH_PREFIX = process.env.OUTPUT_PATH || './output';
+
 export async function processFile(fileName, callback) {
   const reader = readline.createInterface({
-    input: fs.createReadStream(`./output/${fileName}`)
+    input: fs.createReadStream(`${PATH_PREFIX}/${fileName}`)
   });
 
   for await (const line of reader) {
@@ -12,7 +14,7 @@ export async function processFile(fileName, callback) {
 }
 
 export async function writePatientId(id) {
-  if (!writePatientId.patientIdStream) writePatientId.patientIdStream = fs.createWriteStream('./output/patient-ids.csv');
+  if (!writePatientId.patientIdStream) writePatientId.patientIdStream = fs.createWriteStream(`${PATH_PREFIX}/patient-ids.csv`);
   await new Promise((resolve) =>
     writePatientId.patientIdStream.write(`${id}\n`, resolve)
   );
@@ -20,7 +22,7 @@ export async function writePatientId(id) {
 
 export function writePatientResourcesToFile(resources) {
   return new Promise((resolve, reject) => {
-    fs.writeFile('./output/patient-resources.json', JSON.stringify(resources), (err) => {
+    fs.writeFile(`${PATH_PREFIX}/patient-resources.json`, JSON.stringify(resources), (err) => {
       if (err) reject(err);
       else resolve(true);
     })
@@ -29,7 +31,7 @@ export function writePatientResourcesToFile(resources) {
 
 export async function flushCursor(cursor) {
   await new Promise((resolve, reject) => {
-    fs.writeFile('./output/cursor.dat', cursor, (err) => {
+    fs.writeFile(`${PATH_PREFIX}/cursor.dat`, cursor, (err) => {
       if (err) return reject(err);
       resolve();
     })
@@ -38,11 +40,11 @@ export async function flushCursor(cursor) {
 
 export function getCursor() {
   return new Promise((resolve, reject) => {
-    fs.access('./output/cursor.dat', fs.constants.F_OK, (err) => {
+    fs.access(`${PATH_PREFIX}/cursor.dat`, fs.constants.F_OK, (err) => {
       // file does not exist so no previous cursor
       if (err) return resolve('');
 
-      fs.readFile('./output/cursor.dat', (err, data) => {
+      fs.readFile(`${PATH_PREFIX}/cursor.dat`, (err, data) => {
         if (err) return reject(err);
         return resolve(data.toString());
       })

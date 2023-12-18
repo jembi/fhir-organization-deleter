@@ -32,9 +32,14 @@ export async function deleteResources(patientId) {
     const resources = [];
     const response = await axios.get(url);
 
-    if (!response.data || !response.data.entry) {
+    if (!response.data) {
       console.log(`Patient - ${patientId} failed to return expected data. Got:\n`, response);
       throw new Error(`Failed to process patient ${patientId}`);
+    }
+
+    if (!response.data.entry) {
+      console.log(`Patient - ${patientId} no more data entries\n`);
+      return;
     }
 
     for (const entry of response.data.entry) {
@@ -45,7 +50,9 @@ export async function deleteResources(patientId) {
       resources.push(resourcePath);
     }
 
+    console.log('Resources #', resources.length);
     if (resources.length > 0) {
+      console.log(`${new Date().toISOString()} - Writing patient: ${patientId} resources file`);
       await writePatientResourcesToFile(resources);
       try {
         console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} fhir resources`);
@@ -84,9 +91,39 @@ async function deleteResource(resource) {
   } catch (err) {
     if (err.response && err.response.data) {
       console.error(JSON.stringify(err.response.data));
-      throw err;
-    } else {
-      throw err;
     }
+    
+    throw err;
+  }
+}
+
+async function expungeResource(resource) {
+  try {
+    await new Promise((resolve) => setTimeout(() => { resolve() }, 10));
+    await axios.post(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resource}/$expunge`, {
+      "resourceType": "Parameters",
+      "parameter": [
+        {
+          "name": "limit",
+          "valueInteger": 1000
+        },{
+          "name": "expungeDeletedResources",
+          "valueBoolean": true
+        },{
+          "name": "expungePreviousVersions",
+          "valueBoolean": true
+        }
+      ]
+    }, {
+      headers: {
+        'Content-Type': 'application/json+fhir'
+      }
+    });
+  } catch (err) {
+    if (err.response && err.response.data) {
+      console.error(JSON.stringify(err.response.data));
+    }
+
+    throw err;
   }
 }

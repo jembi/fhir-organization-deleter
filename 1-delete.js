@@ -9,7 +9,7 @@ function setupEnv() {
   if (!process.env.ELASTIC_PASSWORD) process.env.ELASTIC_PASSWORD = 'dev_password_only';
   if (!process.env.HAPI_FHIR_URL) process.env.HAPI_FHIR_URL = 'localhost';
   if (!process.env.HAPI_FHIR_PORT) process.env.HAPI_FHIR_PORT = 3447;
-
+  if (!process.env.OUTPUT_PATH) process.env.OUTPUT_PATH = './output';
 }
 
 // @TODO
@@ -30,7 +30,7 @@ async function main() {
   
   let previousCursorFound = cursor === '';
   const patientIdReader = readline.createInterface({
-    input: fs.createReadStream(`./output/patient-ids.csv`)
+    input: fs.createReadStream(`${process.env.OUTPUT_PATH}/patient-ids.csv`)
   });
 
   for await (const patientId of patientIdReader) {
