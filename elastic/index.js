@@ -16,7 +16,7 @@ export async function deleteElasticRawResources(resources) {
   }
 
   try {
-    await client.bulk({ refresh: true, body: bulkRequest });
+    await client.bulk({ refresh: false, body: bulkRequest });
   } catch (err) {
     console.error('Failed to delete patient data from elastic raw');
     throw err;

@@ -16,6 +16,7 @@ services:
     volumes:
       - ../:/app
     environment:
+      OUTPUT_PATH: './output'
       FACILITY_ID: 'placeholder'
       ELASTIC_URL: 'http://elasticsearch_analytics-datastore-elastic-search-01:9200'
       ELASTIC_PASSWORD: 'dev_password_only'
