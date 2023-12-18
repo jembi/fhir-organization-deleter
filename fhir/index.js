@@ -1,55 +1,90 @@
 import axios from 'axios';
-import { writeResourceId, writeMalformedResource, writeSqlConflictResource } from '../filesystem/index.js';
+import { writePatientId, writePatientResourcesToFile } from '../filesystem/index.js';
+import { deleteElasticRawResources } from '../elastic/index.js';
 import types from '../fhir/types.js';
 
-export function processBundle(transactionId, bundle, patientIds) {
-  if (bundle.entry && !Array.isArray(bundle.entry)) {
-    console.error('No entry object or it is not an array');
-    return;
-  }
-  
-  for (const entry of bundle.entry) {
-    if (!entry.resource) {
-      console.error('No resource object found');
-      writeMalformedResource(transactionId, entry);
+export async function extractPatientIds(healthFacilityId) {
+  const innerExtractPatientIds = async (url) => {
+    const response = await axios.get(url);
+    if (response.data && response.data.entry) {
+      for (const entry of response.data.entry) {
+        await writePatientId(entry.resource.id);
+      }
     }
 
-    const resource = entry.resource;
-    const type = resource.resourceType?.toLowerCase();
-    const id = resource.id;
-    if (!type || !id) {
-      console.error('No type or id found');
-      writeMalformedResource(transactionId, resource);
-      continue;
+    const nextLink = response.data.link.filter(link => link.relation === 'next');
+    if (nextLink && nextLink.length > 0) {
+      await innerExtractPatientIds(nextLink[0].url);
     }
-
-    if (type === types.Organization || type === types.Medication) continue;
-
-    let patientId
-    if (type === types.Patient) patientId = resource.id;
-    else if (resource.subject) patientId = resource.subject.reference.split('/')[1];
-    else if (resource.patient) patientId = resource.patient.reference.split('/')[1];
-
-    if (patientId && !patientIds.has(patientId)) continue;
-
-    writeResourceId(type.toLowerCase(), id);
   }
+
+  if (!healthFacilityId || healthFacilityId === 'placeholder') {
+    throw new Error('Failed to set the FACILITY_ID environment variable, got: ', healthFacilityId);
+  }
+
+  const count = 1000;
+  const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient?organization=${healthFacilityId}&_elements=_id&_count=${count}`;
+  await (innerExtractPatientIds(url));
 }
 
-export async function deleteResource(resource) {
-  try {
-    await axios.delete(`http://${process.env.HAPI_PROXY_URL}:${process.env.HAPI_PROXY_PORT}/fhir/${resource}`);
-    console.log(`${new Date().toISOString()} - DELETED: `, resource);
-  } catch (err) {
-    if (err.response && err.response.data) {
-      const issue = err.response.data.issue[0];
-      if (issue.diagnostics.startsWith('HAPI-0550')) {
-        writeSqlConflictResource(resource);
-        console.error(`FAILED TO DELETE: ${resource}`);
-      } else {
-        console.error(JSON.stringify(err.response.data));
+export async function deleteResources(patientId) {
+  const innerDeleteResources = async (url) => {
+    const resources = [];
+    const response = await axios.get(url);
+
+    if (!response.data || !response.data.entry) {
+      console.log(`Patient - ${patientId} failed to return expected data. Got:\n`, response);
+      throw new Error(`Failed to process patient ${patientId}`);
+    }
+
+    for (const entry of response.data.entry) {
+      const resource = entry.resource;
+      const type = resource.resourceType.toLowerCase();
+      if (type === types.Patient || type === types.Organization) continue;
+      const resourcePath = `${resource.resourceType}/${resource.id}`;
+      resources.push(resourcePath);
+    }
+
+    if (resources.length > 0) {
+      await writePatientResourcesToFile(resources);
+      try {
+        console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} fhir resources`);
+        for (const resource of resources) {
+          await deleteResource(resource);
+        }
+      } catch (err) {
+        console.log('Failed to delete hapi-fhir data for patient: ', patientId);
         throw err;
       }
+  
+      try {
+        console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} elastic raw resources`);
+        await deleteElasticRawResources(resources);
+      } catch (err) {
+        console.log('Failed to delete elastic data for patient: ', patientId);
+        throw err;
+      }
+    }
+
+    const nextLink = response.data.link.filter(link => link.relation === 'next');
+    if (nextLink && nextLink.length > 0) {
+      await innerDeleteResources(nextLink[0].url);
+    }
+  }
+
+  const count = 1000;
+  const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient/${patientId}/$everything?_elements=_id&_count=${count}`;
+  await innerDeleteResources(url);
+}
+
+async function deleteResource(resource) {
+  try {
+    await new Promise((resolve) => setTimeout(() => { resolve() }, 10));
+    await axios.delete(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resource}`);
+  } catch (err) {
+    if (err.response && err.response.data) {
+      console.error(JSON.stringify(err.response.data));
+      throw err;
     } else {
       throw err;
     }
