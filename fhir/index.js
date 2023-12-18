@@ -8,7 +8,7 @@ export async function extractPatientIds(healthFacilityId) {
     const response = await axios.get(url);
     if (response.data && response.data.entry) {
       for (const entry of response.data.entry) {
-        await writePatientId(entry.resource.id);
+        await writePatientId(entry.resource.id, process.env.PATIENT_ID_FILENAME);
       }
     }
 
@@ -84,7 +84,7 @@ export async function deleteResources(patientId) {
   await innerDeleteResources(url);
 }
 
-async function deleteResource(resource) {
+export async function deleteResource(resource) {
   try {
     await new Promise((resolve) => setTimeout(() => { resolve() }, 10));
     await axios.delete(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resource}`);
@@ -94,6 +94,30 @@ async function deleteResource(resource) {
     }
     
     throw err;
+  }
+}
+
+export async function doesPatientHaveResources(patientId) {
+  try {
+    const response = await axios.get(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient/${patientId}/$everything`);
+    if (!response.data) {
+      console.log(`Patient - ${patientId} failed to return expected data. Got:\n`, response);
+      return true;
+    }
+
+    if (!response.data.entry) return false;
+
+    // returns themself and the organization they are attached to
+    // so more than 2 indicates a resource is still attached to them
+    return response.data.entry.length > 2;
+  } catch (err) {
+    if (err.response && err.response.data) {
+      console.error(JSON.stringify(err.response.data));
+    } else {
+      console.error(err);
+    }
+
+    return true;
   }
 }
 
