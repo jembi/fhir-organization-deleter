@@ -23,6 +23,8 @@ services:
       ELASTIC_PASSWORD: 'dev_password_only'
       HAPI_FHIR_URL: 'hapi-fhir'
       HAPI_FHIR_PORT: 8080
+      MAX_RETIRES: 10
+      AXIOS_TIMEOUT: 300000
 
 networks:
   hapi-fhir:

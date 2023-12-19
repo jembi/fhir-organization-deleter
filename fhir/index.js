@@ -3,9 +3,11 @@ import { writePatientId, writePatientResourcesToFile } from '../filesystem/index
 import { deleteElasticRawResources } from '../elastic/index.js';
 import types from '../fhir/types.js';
 
+const axiosInstance = axios.create({ timeout: Number(process.env.AXIOS_TIMEOUT) || 60000 })
+
 export async function extractPatientIds(healthFacilityId) {
   const innerExtractPatientIds = async (url) => {
-    const response = await axios.get(url);
+    const response = await axiosInstance.get(url);
     if (response.data && response.data.entry) {
       for (const entry of response.data.entry) {
         await writePatientId(entry.resource.id, process.env.PATIENT_ID_FILENAME);
@@ -30,7 +32,7 @@ export async function extractPatientIds(healthFacilityId) {
 export async function deleteResources(patientId) {
   const innerDeleteResources = async (url) => {
     const resources = [];
-    const response = await axios.get(url);
+    const response = await axiosInstance.get(url);
 
     if (!response.data) {
       console.log(`Patient - ${patientId} failed to return expected data. Got:\n`, response);
@@ -84,11 +86,18 @@ export async function deleteResources(patientId) {
   await innerDeleteResources(url);
 }
 
-export async function deleteResource(resource) {
+export async function deleteResource(resource, retries = 0) {
   try {
     await new Promise((resolve) => setTimeout(() => { resolve() }, 10));
-    await axios.delete(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resource}`);
+    await axiosInstance.delete(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resource}`);
   } catch (err) {
+    if (err.code && err.code === 'ECONNABORTED') {
+      if (retries < Number(process.env.MAX_RETIRES || 10)) {
+        console.warn(`Hapi-fhir timeout hit for DELETE ${resource} trying again`);
+        return deleteResource(resource, ++retries);
+      }
+    }
+
     if (err.response && err.response.data) {
       console.error(JSON.stringify(err.response.data));
     }
@@ -99,7 +108,7 @@ export async function deleteResource(resource) {
 
 export async function doesPatientHaveResources(patientId) {
   try {
-    const response = await axios.get(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient/${patientId}/$everything`);
+    const response = await axiosInstance.get(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient/${patientId}/$everything`);
     if (!response.data) {
       console.log(`Patient - ${patientId} failed to return expected data. Got:\n`, response);
       return true;
@@ -124,7 +133,7 @@ export async function doesPatientHaveResources(patientId) {
 async function expungeResource(resource) {
   try {
     await new Promise((resolve) => setTimeout(() => { resolve() }, 10));
-    await axios.post(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resource}/$expunge`, {
+    await axiosInstance.post(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resource}/$expunge`, {
       "resourceType": "Parameters",
       "parameter": [
         {

@@ -6,3 +6,5 @@ if (!process.env.HAPI_FHIR_PORT) process.env.HAPI_FHIR_PORT = 3447;
 if (!process.env.OUTPUT_PATH) process.env.OUTPUT_PATH = './output';
 if (!process.env.PATIENT_ID_FILENAME) process.env.PATIENT_ID_FILENAME = 'patient-ids.csv';
 if (!process.env.FAILED_PATIENT_FILENAME) process.env.FAILED_PATIENT_FILENAME = 'failed-patients.csv';
+if (!process.env.MAX_RETIRES) process.env.MAX_RETIRES = 10;
+if (!process.env.AXIOS_TIMEOUT) process.env.AXIOS_TIMEOUT = 60000;
