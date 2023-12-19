@@ -24,7 +24,7 @@ export async function extractPatientIds(healthFacilityId) {
     throw new Error('Failed to set the FACILITY_ID environment variable, got: ', healthFacilityId);
   }
 
-  const count = 1000;
+  const count = 200;
   const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient?organization=${healthFacilityId}&_elements=_id&_count=${count}`;
   await (innerExtractPatientIds(url));
 }
@@ -39,9 +39,13 @@ export async function deleteResources(patientId) {
       throw new Error(`Failed to process patient ${patientId}`);
     }
 
+    const nextLink = response.data.link && response.data.link.filter(link => link.relation === 'next');
+    const hasNextLink = nextLink && nextLink.length > 0;
+
     if (!response.data.entry) {
       console.log(`Patient - ${patientId} no more data entries\n`);
-      return;
+      if (hasNextLink) return await innerDeleteResources(nextLink[0].url);
+      else return;
     }
 
     for (const entry of response.data.entry) {
@@ -75,13 +79,12 @@ export async function deleteResources(patientId) {
       }
     }
 
-    const nextLink = response.data.link.filter(link => link.relation === 'next');
-    if (nextLink && nextLink.length > 0) {
+    if (hasNextLink) {
       await innerDeleteResources(nextLink[0].url);
     }
   }
 
-  const count = 1000;
+  const count = 200;
   const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient/${patientId}/$everything?_elements=_id&_count=${count}`;
   await innerDeleteResources(url);
 }
