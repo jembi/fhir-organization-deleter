@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  delete-data:
+  delete-patient-and-organization:
     image: node:18-alpine
     networks:
       openhim:
@@ -11,10 +11,13 @@ services:
       placement:
         constraints:
           - "node.labels.name==node-1"
-    command: sh -c "cd /app && npm run 2:deleter"
+    command: sh -c "cd /app && npm run 2:finalize"
     volumes:
       - ../:/app
     environment:
+      OUTPUT_PATH: './output'
+      PATIENT_ID_FILENAME: 'patient-ids.csv'
+      FAILED_PATIENT_FILENAME: 'failed-patients.csv'
       FACILITY_ID: 'placeholder'
       ELASTIC_URL: 'http://elasticsearch_analytics-datastore-elastic-search-01:9200'
       ELASTIC_PASSWORD: 'dev_password_only'
@@ -22,6 +25,9 @@ services:
       HAPI_FHIR_PORT: 8080
 
 networks:
-  openhim:
-    name: openhim_public
+  hapi-fhir:
+    name: hapi-fhir_public
+    external: true
+  elastic:
+    name: elastic_public
     external: true

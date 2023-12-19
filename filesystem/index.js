@@ -1,22 +1,11 @@
 import fs from 'fs';
-import readline from 'readline';
 
 const PATH_PREFIX = process.env.OUTPUT_PATH || './output';
 
-export async function processFile(fileName, callback) {
-  const reader = readline.createInterface({
-    input: fs.createReadStream(`${PATH_PREFIX}/${fileName}`)
-  });
-
-  for await (const line of reader) {
-    await callback(line);
-  }
-}
-
-export async function writePatientId(id) {
-  if (!writePatientId.patientIdStream) writePatientId.patientIdStream = fs.createWriteStream(`${PATH_PREFIX}/patient-ids.csv`);
+export async function writePatientId(id, fileName) {
+  if (!writePatientId[fileName]) writePatientId[fileName] = fs.createWriteStream(`${PATH_PREFIX}/${fileName}`);
   await new Promise((resolve) =>
-    writePatientId.patientIdStream.write(`${id}\n`, resolve)
+    writePatientId[fileName].write(`${id}\n`, resolve)
   );
 }
 
