@@ -4,7 +4,8 @@ services:
   delete-patient-and-organization:
     image: node:18-alpine
     networks:
-      openhim:
+      elastic:
+      hapi-fhir:
     deploy:
       restart_policy:
         condition: none
