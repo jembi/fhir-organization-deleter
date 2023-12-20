@@ -1,8 +1,8 @@
 import fs from 'fs';
 import readline from 'readline';
 import './env/index.js';
-import { extractPatientIds, deleteResource, doesPatientHaveResources, deleteResources } from './fhir/index.js';
-import { deleteElasticPatient, deleteElasticRawResources } from './elastic/index.js';
+import { extractPatientIds, deleteResource, doesPatientHaveResources } from './fhir/index.js';
+import { deleteElasticPatient, deleteElasticRawResources, removeLingeringRawResources } from './elastic/index.js';
 import { flushCursor, getCursor, writePatientId } from './filesystem/index.js';
 
 async function main() {
@@ -37,6 +37,10 @@ async function main() {
       hasFailedPatients = true;
       continue;
     }
+
+    console.log(`${new Date().toISOString()} - checking for lingering fhir-raw resources: ${patientId}`);
+    await removeLingeringRawResources(patientId);
+
     try {
       console.log(`${new Date().toISOString()} - deleting patient: ${patientId}`);
       await Promise.all([

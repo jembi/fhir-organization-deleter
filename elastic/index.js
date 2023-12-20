@@ -38,3 +38,41 @@ export async function deleteElasticRawResources(resources) {
     throw err;
   }
 }
+
+export async function removeLingeringRawResources(patientId) {
+  const query = {
+    bool: {
+      should: [
+        {
+          term: {
+            "resource.patient.reference.keyword": {
+              value: `Patient/${patientId}`
+            }
+          }
+        },
+        {
+          term: {
+            "resource.subject.reference.keyword": {
+              value: `Patient/${patientId}`
+            }
+          }
+        }
+      ]
+    }
+  }
+
+  const response = await client.search({
+    index: 'fhir-raw-*',
+    _source: false,
+    body: { query }
+  });
+
+  if (response.body.hits.total.value > 0) {
+    console.log(`${new Date().toISOString()} - patient ${patientId} has lingering raw resources ... deleting.`);
+    await client.deleteByQuery({
+      index: 'fhir-raw-*',
+      body: { query }
+    });
+    console.log(`${new Date().toISOString()} - patient ${patientId} lingering raw resources removed.`);
+  }
+}
