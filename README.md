@@ -29,3 +29,4 @@ In order to expunge the data, the application requires a file of all the deleted
 1. Copy the postgres output.csv file into the output folder
 2. Set the `DELETED_RESOURCE_FILENAME` environment variable in the docker file to be the same as what you named the file that you copied into the output folder
 3. Run `npm run 3:expunge:docker`
+4. Check the `expunge-fail.csv` file to see if any resources failed to expunge and retry them.

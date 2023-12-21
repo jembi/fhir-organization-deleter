@@ -2,7 +2,7 @@ import fs from 'fs';
 import readline from 'readline';
 import './env/index.js';
 import { expungeResource } from './fhir/index.js';
-import { flushCursor, getCursor } from './filesystem/index.js';
+import { flushCursor, getCursor, writePatientId } from './filesystem/index.js';
 
 async function main() {
   console.log(`${new Date().toISOString()} - starting processing`);
@@ -15,6 +15,7 @@ async function main() {
     input: fs.createReadStream(`${process.env.OUTPUT_PATH}/${process.env.DELETED_RESOURCE_FILENAME}`)
   });
   
+  let processed = 0;
   for await (const deletedResource of deletedResourceReader) {
     if (!previousCursorFound) {
       if (deletedResource === cursor) previousCursorFound = true;
@@ -23,8 +24,18 @@ async function main() {
 
     await flushCursor(deletedResource);
 
-    console.log(`${new Date().toISOString()} - expunging ${deletedResource}`);
-    await expungeResource(deletedResource);
+    try {
+      await expungeResource(deletedResource);
+    } catch (err) {
+      console.log(`${new Date().toISOString()} - failed to expunge ${deletedResource} writing to failed file.`);
+      writePatientId(deletedResource, 'expunge-fail.csv');
+    }
+    
+    processed++;
+    if (processed % 10000) {
+      console.log(`${new Date().toISOString()} - expunged ${processed} resources`);
+      console.log(`${new Date().toISOString()} - just finished processing ${deletedResource}`);
+    }
   }
   
   await flushCursor('');
