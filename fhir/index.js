@@ -133,21 +133,21 @@ export async function doesPatientHaveResources(patientId) {
   }
 }
 
-async function expungeResource(resource) {
+export async function expungeResource(resource, retries = 0) {
   try {
     await new Promise((resolve) => setTimeout(() => { resolve() }, 10));
     await axiosInstance.post(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resource}/$expunge`, {
-      "resourceType": "Parameters",
-      "parameter": [
+      resourceType: "Parameters",
+      parameter: [
         {
-          "name": "limit",
-          "valueInteger": 1000
+          name: "limit",
+          valueInteger: 1000
         },{
-          "name": "expungeDeletedResources",
-          "valueBoolean": true
+          name: "expungeDeletedResources",
+          valueBoolean: true
         },{
-          "name": "expungePreviousVersions",
-          "valueBoolean": true
+          name: "expungePreviousVersions",
+          valueBoolean: true
         }
       ]
     }, {
@@ -156,7 +156,18 @@ async function expungeResource(resource) {
       }
     });
   } catch (err) {
+    if (err.code && err.code === 'ECONNABORTED') {
+      if (retries < Number(process.env.MAX_RETIRES || 10)) {
+        console.warn(`Hapi-fhir timeout hit for EXPUNGE ${resource} trying again`);
+        return expungeResource(resource, ++retries);
+      }
+    }
+
     if (err.response && err.response.data) {
+      // calling expunge on either an already expunged resource
+      // or it didnt exist originally so continue
+      if (err.response.status === 404) return;
+      
       console.error(JSON.stringify(err.response.data));
     }
 

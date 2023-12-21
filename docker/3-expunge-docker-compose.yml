@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  expunge-data:
+    image: node:18-alpine
+    networks:
+      hapi-fhir:
+    deploy:
+      restart_policy:
+        condition: none
+      placement:
+        constraints:
+          - "node.labels.name==node-1"
+    command: sh -c "cd /app && npm run 3:expunge"
+    volumes:
+      - ../:/app
+    environment:
+      OUTPUT_PATH: './output'
+      DELETED_RESOURCE_FILENAME: 'deleted-resources.csv'
+      HAPI_FHIR_URL: 'hapi-fhir'
+      HAPI_FHIR_PORT: 8080
+      MAX_RETIRES: 10
+      AXIOS_TIMEOUT: 300000
+
+networks:
+  hapi-fhir:
+    name: hapi-fhir_public
+    external: true
