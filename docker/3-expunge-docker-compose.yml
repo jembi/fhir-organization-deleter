@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  delete-patient-and-organization:
+  expunge-data:
     image: node:18-alpine
     networks:
       hapi-fhir:
