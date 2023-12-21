@@ -1,26 +1,22 @@
 version: '3.9'
 
 services:
-  delete-resources:
+  delete-patient-and-organization:
     image: node:18-alpine
     networks:
       hapi-fhir:
-      elastic:
     deploy:
       restart_policy:
         condition: none
       placement:
         constraints:
           - "node.labels.name==node-1"
-    command: sh -c "cd /app && npm run 1:delete"
+    command: sh -c "cd /app && npm run 3:expunge"
     volumes:
       - ../:/app
     environment:
-      OUTPUT_PATH: './output3'
-      PATIENT_ID_FILENAME: 'patient-ids.csv'
-      FACILITY_ID: '52b368c94a994141bc043fa6c34577a9'
-      ELASTIC_URL: 'http://elasticsearch_analytics-datastore-elastic-search-01:9200'
-      ELASTIC_PASSWORD: '2*yq1xR$$WKK2'
+      OUTPUT_PATH: './output'
+      DELETED_RESOURCE_FILENAME: 'deleted-resources.csv'
       HAPI_FHIR_URL: 'hapi-fhir'
       HAPI_FHIR_PORT: 8080
       MAX_RETIRES: 10
@@ -29,7 +25,4 @@ services:
 networks:
   hapi-fhir:
     name: hapi-fhir_public
-    external: true
-  elastic:
-    name: elastic_public
     external: true

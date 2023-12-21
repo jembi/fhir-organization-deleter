@@ -8,7 +8,9 @@
     "1:delete": "node 1-delete.js",
     "1:delete:docker": "docker stack deploy -c ./docker/1-delete-docker-compose.yml organization-deleter",
     "2:finalize": "node 2-finalizer.js",
-    "2:finalize:docker": "docker stack deploy -c ./docker/2-finalizer-docker-compose.yml organization-deleter"
+    "2:finalize:docker": "docker stack deploy -c ./docker/2-finalizer-docker-compose.yml organization-deleter",
+    "3:expunge": "node 3-expunge.js",
+    "3:expunge:docker": "docker stack deploy -c ./docker/3-expunge-docker-compose.yml organization-deleter"
   },
   "author": "Arran Standish",
   "license": "ISC",
