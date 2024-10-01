@@ -36,3 +36,6 @@ networks:
   elastic:
     name: elastic_public
     external: true
+  clickhouse:
+    name: clickhouse_public
+    external: true
