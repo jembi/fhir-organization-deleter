@@ -15,9 +15,7 @@ async function main() {
   console.log(`${new Date().toISOString()} - starting processing`);
   
   const cursor = await getCursor();
-  if (cursor) console.log(`${new Date().toISOString()} - Found cursor ${cursor} resuming from there`);
-  else await extractPatientIds(healthFacilityId);
-  
+
   let previousCursorFound = cursor === '';
   const patientIdReader = readline.createInterface({
     input: fs.createReadStream(`${process.env.OUTPUT_PATH}/${process.env.PATIENT_ID_FILENAME}`)

@@ -6,28 +6,36 @@ import types from '../fhir/types.js';
 
 const axiosInstance = axios.create({ timeout: Number(process.env.AXIOS_TIMEOUT) || 60000 })
 
-export async function extractPatientIds(healthFacilityId) {
-  const innerExtractPatientIds = async (url) => {
-    const response = await axiosInstance.get(url);
-    if (response.data && response.data.entry) {
-      for (const entry of response.data.entry) {
-        await writePatientId(entry.resource.id, process.env.PATIENT_ID_FILENAME);
-      }
+export async function extractPatientIds(healthFacilityId, nextURL) {
+  // Use nextUrl if provided, otherwise create the initial URL
+  const count = 200; // Set the number of patients to extract
+  const counter = 0;
+
+  const url = nextURL 
+    ? nextURL 
+    : `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient?organization=${healthFacilityId}&_elements=_id&_count=${count}`;
+
+  const response = await axios.get(url);
+
+  if (response.data && response.data.entry) {
+    // Assuming that entry is an array of patient records
+    const entries = response.data.entry.map(entry => entry.resource.id);
+    for (const entry of entries) {
+      await writePatientId(entry, process.env.PATIENT_ID_FILENAME); // Assuming you have a function to write each patient ID
     }
 
-    const nextLink = response.data.link.filter(link => link.relation === 'next');
-    if (nextLink && nextLink.length > 0) {
-      await innerExtractPatientIds(nextLink[0].url);
+    // Return the URL for the next batch if available
+    const nextLink = response.data.link.find(link => link.relation === 'next');
+
+    // If there is a next URL and the counter is less than 5, call extractPatientIds recursively
+    if (nextLink && counter < 5) {
+      return extractPatientIds(healthFacilityId, nextLink.url, counter + 1);
     }
+
+    return nextLink ? nextLink.url : null; // Return the next URL or null if no more pages
   }
 
-  if (!healthFacilityId || healthFacilityId === 'placeholder') {
-    throw new Error('Failed to set the FACILITY_ID environment variable, got: ', healthFacilityId);
-  }
-
-  const count = 200;
-  const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient?organization=${healthFacilityId}&_elements=_id&_count=${count}`;
-  await (innerExtractPatientIds(url));
+  return null; // No more patients
 }
 
 export async function checkAndDeleteResource(resourcePath, patientId, processedResources = new Set()) {
@@ -82,7 +90,6 @@ export async function checkAndDeleteResource(resourcePath, patientId, processedR
     }
   }
 }
-
 
 
 export async function deleteResources(patientId) {
