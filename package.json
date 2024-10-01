@@ -15,6 +15,7 @@
   "author": "Arran Standish",
   "license": "ISC",
   "dependencies": {
+    "@clickhouse/client": "^1.6.0",
     "@elastic/elasticsearch": "^7.17.13",
     "axios": "^1.6.2",
     "mongodb": "^6.3.0"
