@@ -14,7 +14,6 @@ async function main() {
   let totalPatientsProcessed = 0;
   let nextUrl = null;
 
-
   while (true) {
     nextUrl = await extractPatientIds(healthFacilityId, nextUrl);
 

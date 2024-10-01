@@ -1,4 +1,4 @@
-if (!process.env.FACILITY_ID) process.env.FACILITY_ID = '1490b3ca120c457b998b8d5b719d8378';
+if (!process.env.FACILITY_ID) process.env.FACILITY_ID = '18d5a42102424a9586867549b5abb350';
 if (!process.env.CLICKHOUSE_URL) process.env.CLICKHOUSE_URL = 'http://localhost:8124'
 if (!process.env.CLICKHOUSE_USERNAME) process.env.CLICKHOUSE_USERNAME = 'default';
 if (!process.env.CLICKHOUSE_PASSWORD) process.env.CLICKHOUSE_PASSWORD = 'dev_password_only';

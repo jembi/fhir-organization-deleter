@@ -8,12 +8,10 @@ const axiosInstance = axios.create({ timeout: Number(process.env.AXIOS_TIMEOUT) 
 
 export async function extractPatientIds(healthFacilityId, nextURL) {
   // Use nextUrl if provided, otherwise create the initial URL
-  const count = 200; // Set the number of patients to extract
+  const count = 1900; // Set the number of patients to extract
   const counter = 0;
 
-  const url = nextURL 
-    ? nextURL 
-    : `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient?organization=${healthFacilityId}&_elements=_id&_count=${count}`;
+  const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient?organization=${healthFacilityId}&_elements=_id&_count=${count}`;
 
   const response = await axios.get(url);
 
@@ -27,10 +25,10 @@ export async function extractPatientIds(healthFacilityId, nextURL) {
     // Return the URL for the next batch if available
     const nextLink = response.data.link.find(link => link.relation === 'next');
 
-    // If there is a next URL and the counter is less than 5, call extractPatientIds recursively
-    if (nextLink && counter < 5) {
-      return extractPatientIds(healthFacilityId, nextLink.url, counter + 1);
-    }
+    // // If there is a next URL and the counter is less than 5, call extractPatientIds recursively
+    // if (nextLink && counter < 5) {
+    //   return extractPatientIds(healthFacilityId, nextLink.url, counter + 1);
+    // }
 
     return nextLink ? nextLink.url : null; // Return the next URL or null if no more pages
   }
