@@ -3,6 +3,7 @@ import readline from 'readline';
 import './env/index.js';
 import { extractPatientIds, deleteResource, doesPatientHaveResources } from './fhir/index.js';
 import { deleteElasticPatient, deleteElasticRawResources, removeLingeringRawResources } from './elastic/index.js';
+import { deleteClickhouseRawResources, deleteClickhousePatient } from './clickhouse/index.js';
 import { flushCursor, getCursor, writePatientId } from './filesystem/index.js';
 
 async function main() {
@@ -14,9 +15,7 @@ async function main() {
   console.log(`${new Date().toISOString()} - starting processing`);
   
   const cursor = await getCursor();
-  if (cursor) console.log(`${new Date().toISOString()} - Found cursor ${cursor} resuming from there`);
-  else await extractPatientIds(healthFacilityId);
-  
+
   let previousCursorFound = cursor === '';
   const patientIdReader = readline.createInterface({
     input: fs.createReadStream(`${process.env.OUTPUT_PATH}/${process.env.PATIENT_ID_FILENAME}`)
@@ -44,6 +43,7 @@ async function main() {
     try {
       console.log(`${new Date().toISOString()} - deleting patient: ${patientId}`);
       await Promise.all([
+        deleteClickhousePatient(patientId),
         deleteElasticPatient(patientId),
         deleteResource(`Patient/${patientId}`)
       ]);
@@ -63,6 +63,7 @@ async function main() {
   } else {
     await deleteResource(`Organization/${healthFacilityId}`);
     await deleteElasticRawResources([`Organization/${healthFacilityId}`]);
+    await deleteClickhouseRawResources([`Organization/${healthFacilityId}`]);
   }
 
   console.log(`${new Date().toISOString()} - finished processing`);
