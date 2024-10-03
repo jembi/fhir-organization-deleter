@@ -11,8 +11,9 @@ export async function extractPatientIds(healthFacilityId, nextURL) {
   const count = 1900; // Set the number of patients to extract
   const counter = 0;
 
-  const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient?organization=${healthFacilityId}&_elements=_id&_count=${count}`;
-
+  const url = nextURL 
+    ? nextURL 
+    : `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient?organization=${healthFacilityId}&_elements=_id&_count=${count}`;
   const response = await axios.get(url);
 
   if (response.data && response.data.entry) {
