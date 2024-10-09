@@ -9,7 +9,10 @@ services:
       clickhouse:
     deploy:
       restart_policy:
-        condition: none
+        condition: always        # Restart no matter why it stopped
+        delay: 10s               # Wait 10 seconds before restarting
+        max_attempts: 5          # Retry up to 5 times for failed conditions
+        window: 120s             # Within a window of 2 minutes
       placement:
         constraints:
           - "node.labels.name==node-1"
