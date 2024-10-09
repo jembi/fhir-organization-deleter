@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { writePatientId, writePatientResourcesToFile } from '../filesystem/index.js';
 import { deleteElasticRawResources } from '../elastic/index.js';
-import { deleteClickhouseRawResources } from '../clickhouse/index.js';
+import { deleteClickhousePatientData } from '../clickhouse/index.js';
 import types from '../fhir/types.js';
 
 const axiosInstance = axios.create({ timeout: Number(process.env.AXIOS_TIMEOUT) || 60000 })
@@ -143,15 +143,15 @@ export async function deleteResources(patientId) {
         console.error(`Failed to delete Elastic data for patient ${patientId}:`, err);
         throw err;
       }
+    }
 
-      // Handle deletion from ClickHouse
-      try {
-        console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} ClickHouse raw resources`);
-        await deleteClickhouseRawResources(resources);
-      } catch (err) {
-        console.error(`Failed to delete ClickHouse data for patient ${patientId}:`, err);
-        throw err;
-      }
+    // Handle deletion from ClickHouse
+    try {
+      console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} ClickHouse raw resources`);
+      await deleteClickhousePatientData(patientId);
+    } catch (err) {
+      console.error(`Failed to delete ClickHouse data for patient ${patientId}:`, err);
+      throw err;
     }
 
     // Continue if there are more pages of data
