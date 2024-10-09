@@ -123,6 +123,8 @@ export async function deleteClickhouseRawResources(resources) {
         query,     // The query string
         format: 'JSON'  // Expected format
       });
+
+      console.log(`Successfully deleted ${id} from raw.${type}.`);
     }
     console.log('Successfully deleted resources from ClickHouse');
   } catch (err) {
