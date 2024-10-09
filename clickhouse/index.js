@@ -31,7 +31,7 @@ export async function deleteClickhousePatientData(patientId) {
           let query = `
             ALTER TABLE raw.${table}
             DELETE 
-            WHERE patient.reference = ['Patient/${patientId}'];
+            WHERE subject.reference = ['Patient/${patientId}'];
           `;
         
           try {
@@ -40,16 +40,16 @@ export async function deleteClickhousePatientData(patientId) {
                 query,     // The query string
                 format: 'JSON'  // Expected format
               });
-            console.log(`Successfully deleted patient data from ${table} using patient.reference.`);
+            console.log(`Successfully deleted patient data from ${table} using subject.reference.`);
           } catch (err) {
-            if (err.type === 'UNKNOWN_IDENTIFIER' && err.message.includes('patient.reference')) {
-              console.warn(`'patient.reference' column missing in table ${table}. Trying with 'subject.reference'.`);
+            if (err.type === 'UNKNOWN_IDENTIFIER' && err.message.includes('subject.reference')) {
+              console.warn(`'subject.reference' column missing in table ${table}. Trying with 'patient.reference'.`);
     
               // If patient.reference is missing, try deleting using subject.reference
               query = `
                 ALTER TABLE raw.${table}
                 DELETE 
-                WHERE subject.reference = ['Patient/${patientId}'];
+                WHERE patient.reference = ['Patient/${patientId}'];
               `;
     
               // Execute the new query with subject.reference
@@ -57,7 +57,7 @@ export async function deleteClickhousePatientData(patientId) {
                 query,     // The query string
                 format: 'JSON'  // Expected format
               });
-              console.log(`Successfully deleted patient data from ${table} using subject.reference.`);
+              console.log(`Successfully deleted patient data from ${table} using patient.reference.`);
             } else {
               // If it's a different error, rethrow
               throw err;
