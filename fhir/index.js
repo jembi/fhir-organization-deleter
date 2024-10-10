@@ -145,15 +145,6 @@ export async function deleteResources(patientId) {
       }
     }
 
-    // Handle deletion from ClickHouse
-    try {
-      console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} ClickHouse raw resources`);
-      await deleteClickhousePatientData(patientId);
-    } catch (err) {
-      console.error(`Failed to delete ClickHouse data for patient ${patientId}:`, err);
-      throw err;
-    }
-
     // Continue if there are more pages of data
     if (hasNextLink) {
       await innerDeleteResources(nextLink[0].url);

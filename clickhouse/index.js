@@ -70,6 +70,57 @@ export async function deleteClickhousePatientData(patientId) {
       }
   }
 
+export async function deleteClickhouseAllPatients(patientIds) {
+  const tables = [
+    'care_plan', 'diagnostic_report', 'encounter', 'medication_dispense', 'medication_statement',
+    'observation', 'procedure', 'questionnaire_response',
+    'related_person', 'service_request'
+  ];
+
+  try {
+      for (const table of tables) {
+        let query = `
+          ALTER TABLE raw.${table}
+          DELETE 
+          WHERE subject.reference IN (${Array.isArray(patientIds) ? patientIds.map(id => `['Patient/${id}']`).join(', ') : `['Patient/${patientIds}']`});
+        `;
+      
+        try {
+          // Attempt to delete using patient.reference
+          await clickhouse.query({
+              query,     // The query string
+              format: 'JSON'  // Expected format
+            });
+          console.log(`Successfully deleted patient data from ${table} using subject.reference.`);
+        } catch (err) {
+          if (err.type === 'UNKNOWN_IDENTIFIER' && err.message.includes('subject.reference')) {
+            console.warn(`'subject.reference' column missing in table ${table}. Trying with 'patient.reference'.`);
+  
+            // If patient.reference is missing, try deleting using subject.reference
+            query = `
+              ALTER TABLE raw.${table}
+              DELETE 
+              WHERE patient.reference IN (${Array.isArray(patientIds) ? patientIds.map(id => `['Patient/${id}']`).join(', ') : `['Patient/${patientIds}']`});
+            `;
+  
+            // Execute the new query with subject.reference
+            await clickhouse.query({
+              query,     // The query string
+              format: 'JSON'  // Expected format
+            });
+            console.log(`Successfully deleted patient data from ${table} using patient.reference.`);
+          } else {
+            // If it's a different error, rethrow
+            throw err;
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`Failed to delete patient data from ClickHouse:`, err);
+      throw err;
+    }
+}
+
 export async function deleteClickhousePatient(patientId) {
 
     try {

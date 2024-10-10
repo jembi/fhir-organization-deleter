@@ -12,6 +12,7 @@ async function main() {
     throw new Error('Failed to set the FACILITY_ID environment variable, got: ', healthFacilityId);
   }
 
+  const start = new Date().getTime();
   console.log(`${new Date().toISOString()} - starting processing`);
   
   const cursor = await getCursor();
@@ -67,6 +68,9 @@ async function main() {
   }
 
   console.log(`${new Date().toISOString()} - finished processing`);
+  const end = new Date().getTime();
+  const duration = (end - start) / 1000;
+  console.log(`${new Date().toISOString()} - finished processing in ${duration} seconds`);
 }
 
 main()
