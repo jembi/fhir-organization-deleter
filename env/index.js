@@ -1,4 +1,5 @@
-if (!process.env.FACILITY_ID) process.env.FACILITY_ID = '18d5a42102424a9586867549b5abb350';
+if (!process.env.FACILITY_ID) process.env.FACILITY_ID = '009a6a861c1b45778c0cbedadefe52a4';
+if (!process.env.FACILITY_ID_LIST) process.env.FACILITY_ID_LIST = '1490b3ca120c457b998b8d5b719d8378,18d5a42102424a9586867549b5abb350,7c18655bec4542fd8d323045b8d953d4,878066e1-cca1-406e-ab74-fe49040aeec0,90e0848e-0674-4f3d-af15-8b2f43530453,b6e9f3f4307c4d12914a4ceba24f9217';
 if (!process.env.CLICKHOUSE_URL) process.env.CLICKHOUSE_URL = 'http://localhost:8124'
 if (!process.env.CLICKHOUSE_USERNAME) process.env.CLICKHOUSE_USERNAME = 'default';
 if (!process.env.CLICKHOUSE_PASSWORD) process.env.CLICKHOUSE_PASSWORD = 'dev_password_only';

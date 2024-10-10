@@ -9,7 +9,10 @@ services:
       clickhouse:
     deploy:
       restart_policy:
-        condition: none
+        condition: on-failure        # Restart no matter why it stopped
+        delay: 10s               # Wait 10 seconds before restarting
+        max_attempts: 5          # Retry up to 5 times for failed conditions
+        window: 120s             # Within a window of 2 minutes
       placement:
         constraints:
           - "node.labels.name==node-1"
@@ -21,6 +24,7 @@ services:
       PATIENT_ID_FILENAME: 'patient-ids.csv'
       FAILED_PATIENT_FILENAME: 'failed-patients.csv'
       FACILITY_ID: 'placeholder'
+      FACILITY_ID_LIST: 'placeholder1,placeholder2'
       ELASTIC_URL: 'http://analytics-datastore-elastic-search-01:9200'
       ELASTIC_USERNAME: 'elastic'
       ELASTIC_PASSWORD: 'dev_password_only'

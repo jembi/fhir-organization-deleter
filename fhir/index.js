@@ -20,7 +20,7 @@ export async function extractPatientIds(healthFacilityId, nextURL) {
     // Assuming that entry is an array of patient records
     const entries = response.data.entry.map(entry => entry.resource.id);
     for (const entry of entries) {
-      await writePatientId(entry, process.env.PATIENT_ID_FILENAME); // Assuming you have a function to write each patient ID
+      await writePatientId(entry, `${process.env.PATIENT_ID_FILENAME}-${healthFacilityId}`); // Assuming you have a function to write each patient ID
     }
 
     // Return the URL for the next batch if available
