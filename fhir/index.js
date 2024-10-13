@@ -29,7 +29,8 @@ export async function deleteResourcesAsBundle(resources) {
       const response = await axiosInstance.post(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir`, bundle);
       if (response.status !== 200) console.error(`Failed to delete resources: ${response.status} - ${response.statusText}`);
     } catch (error) {
-      console.error('Failed to delete resources:', error);
+      console.error('Failed to delete resources:', bundle.entry.request.url);
+      throw error;
     }
   }
 }
