@@ -6,6 +6,34 @@ import types from '../fhir/types.js';
 
 const axiosInstance = axios.create({ timeout: Number(process.env.AXIOS_TIMEOUT) || 60000 })
 
+const chunk = (arr, n) => Array.from({ length: Math.ceil(arr.length / n) }, (v, k) => arr.slice(k * n, k * n + n));
+
+export async function deleteResourcesAsBundle(resources) {
+
+  // Break the resources into chunks of 72 resources, this is to avoid 
+  // overwhelming the HAPI FHIR server with too many requests at once.
+  // This is a common pattern in batch processing.
+  const bundledResources = chunk(resources, 72).map(resources => ({
+    resourceType: 'Bundle',
+    type: 'transaction',
+    entry: resources.map(resource => ({
+      request: {
+        method: 'DELETE',
+        url: resource,
+      },
+    })),
+  }));
+
+  for (const bundle of bundledResources) {
+    try {
+      const response = await axiosInstance.post(`http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir`, bundle);
+      if (response.status !== 200) console.error(`Failed to delete resources: ${response.status} - ${response.statusText}`);
+    } catch (error) {
+      console.error('Failed to delete resources:', error);
+    }
+  }
+}
+
 export async function extractPatientIds(healthFacilityId, nextURL) {
   // Use nextUrl if provided, otherwise create the initial URL
   const count = 1900; // Set the number of patients to extract
@@ -90,7 +118,6 @@ export async function checkAndDeleteResource(resourcePath, patientId, processedR
   }
 }
 
-
 export async function deleteResources(patientId) {
   const innerDeleteResources = async (url) => {
     const resources = [];
@@ -127,9 +154,7 @@ export async function deleteResources(patientId) {
 
       try {
         console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} FHIR resources`);
-        for (const resource of resources) {
-          await checkAndDeleteResource(resource, patientId);
-        }
+        await deleteResourcesAsBundle(resources);
       } catch (err) {
         console.error(`Failed to delete FHIR data for patient ${patientId}:`, err);
         throw err;
