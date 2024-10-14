@@ -27,7 +27,8 @@ export async function deleteElasticPatient(patientId) {
 export async function deleteElasticRawResources(resources) {
   let bulkRequest = [];
   for (const resource of resources) {
-    const [type, id] = resource.split('/');
+    const type = resource.resource.resourceType;
+    const id = resource.resource.id;
     bulkRequest.push({ delete: { _index: `fhir-raw-${type.toLowerCase()}`, _id: id } });
   }
 
