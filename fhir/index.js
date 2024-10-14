@@ -92,69 +92,63 @@ export async function checkAndDeleteResource(resourcePath, patientId, processedR
 
 
 export async function deleteResources(patientId) {
-  const innerDeleteResources = async (url) => {
-    const resources = [];
-    const response = await axiosInstance.get(url);
-
-    if (!response.data) {
-      console.log(`Patient - ${patientId} failed to return expected data. Got:\n`, response);
-      throw new Error(`Failed to process patient ${patientId}`);
+  const deleteFhirResources = async (resources) => {
+    const bundle = {
+      resourceType: 'Bundle',
+      type: 'transaction',
+      entry: resources.map(resource => {
+        return {
+          "request": {
+           "method": "DELETE",
+           "url": `${resource.resource.resourceType}/${resource.resource.id}`
+         } 
+       }
+      })
     }
 
-    const nextLink = response.data.link && response.data.link.filter(link => link.relation === 'next');
-    const hasNextLink = nextLink && nextLink.length > 0;
+    const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir`
 
-    if (!response.data.entry) {
-      console.log(`Patient - ${patientId} no more data entries\n`);
-      if (hasNextLink) return await innerDeleteResources(nextLink[0].url);
-      else return;
-    }
+    await axios.post(url, bundle);
+  }
+  const processResources = async (url, tries=3) => {
+    try {
+      const response = await axiosInstance.get(url);
 
-    for (const entry of response.data.entry) {
-      const resource = entry.resource;
-      const type = resource.resourceType.toLowerCase();
-      // Skip deleting Patient or Organization
-      if (type === 'patient' || type === 'organization') continue;
-      
-      const resourcePath = `${resource.resourceType}/${resource.id}`;
-      resources.push(resourcePath);
-    }
+      if (response.data && response.data.entry?.length) {
+        await deleteFhirResources(response.data.entry);
 
-    console.log('Resources #', resources.length);
-    if (resources.length > 0) {
-      console.log(`${new Date().toISOString()} - Writing patient: ${patientId} resources file`);
-      await writePatientResourcesToFile(resources);
-
-      try {
-        console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} FHIR resources`);
-        for (const resource of resources) {
-          await checkAndDeleteResource(resource, patientId);
-        }
-      } catch (err) {
-        console.error(`Failed to delete FHIR data for patient ${patientId}:`, err);
-        throw err;
+        await deleteElasticRawResources(response.data.entry)
       }
 
-      // Handle deletion from Elastic
-      try {
-        console.log(`${new Date().toISOString()} - Deleting patient: ${patientId} Elastic raw resources`);
-        await deleteElasticRawResources(resources);
-      } catch (err) {
-        console.error(`Failed to delete Elastic data for patient ${patientId}:`, err);
-        throw err;
+      const next = response.data.link?.filter(link => link.relation === 'next');
+      if (next.length) {
+        return await processResources(url, tries=3);
+      } else {
+        console.log('Done processing batch')
+        return 'done';
+      } 
+    } catch (error) {
+      console.log('Iam shsh', error)
+      if (tries >= 0) {
+        await processResources(url, tries-1);
+      } else {
+
+        /// TODO should write to a file
+        // writePatientResourcesToFile()
       }
     }
+  }
 
-    // Continue if there are more pages of data
-    if (hasNextLink) {
-      await innerDeleteResources(nextLink[0].url);
-    }
-  };
+  const resources = ['DiagnosticReport', 'QuestionnaireResponse', 'Observation', 'MedicationStatement', 'MedicationDispense', 'Procedure', 'ServiceRequest', 'CarePlan', 'RelatedPerson', 'Encounter']
 
-  // Start deletion by fetching everything related to the patient
-  const count = 200;
-  const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/Patient/${patientId}/$everything?_elements=_id&_count=${count}`;
-  await innerDeleteResources(url);
+  for (let index = 0; index < resources.length; index++) {
+    const element = resources[index];
+    const count = 200;
+    const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${element}?patient=${patientId}&_elements=_id&_count=${count}`
+    console.log(`Processing ${element}, for ${patientId}`)
+    await processResources(url);
+    console.log('Done processing')
+  }
 }
 
 export async function deleteResource(resource, retries = 0, processedResources = new Set()) {
