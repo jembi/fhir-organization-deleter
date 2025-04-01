@@ -183,3 +183,30 @@ export async function deleteClickhouseRawResources(resources) {
     throw err;
   }
 }
+
+export async function updateResourceDeletedAt(resourceType, resourceId, deletedAt) {
+  try {
+    // Convert resourceType to match table naming convention
+    const tableName = resourceTypeMap[resourceType.toLowerCase()] || resourceType.toLowerCase();
+    
+    const query = `
+      ALTER TABLE raw.${tableName}
+      UPDATE deleted_at = '${deletedAt}'
+      WHERE id = '${resourceId}'
+    `;
+
+    const result = await clickhouse.query({
+      query,
+      format: 'JSONEachRow'
+    });
+    
+    console.log(`Successfully updated deleted_at timestamp for ${resourceType}/${resourceId}`);
+  } catch (err) {
+    console.error(`Failed to update deleted_at timestamp for ${resourceType}/${resourceId}:`, err);
+    throw err;
+  }
+}
+
+
+
+ 

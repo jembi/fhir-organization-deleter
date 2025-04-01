@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  check-resources:
+    image: node:18-alpine
+    networks:
+      hapi-fhir:
+      clickhouse:
+    deploy:
+      restart_policy:
+        condition: always        # Restart no matter why it stopped
+        delay: 10s               # Wait 10 seconds before restarting
+        max_attempts: 5          # Retry up to 5 times for failed conditions
+        window: 120s             # Within a window of 2 minutes
+      placement:
+        constraints:
+          - "node.labels.name==node-1"
+    command: sh -c "cd /app && npm run 4:checker"
+    volumes:
+      - ../:/app
+    environment:
+      OUTPUT_PATH: './output'
+      RESOURCE_ID_FILENAME: 'resource-ids.csv'
+      DELETED_AT: '2025-01-01'
+      CLICKHOUSE_URL: 'http://analytics-datastore-clickhouse-01:8123'
+      CLICKHOUSE_USERNAME: 'default'
+      CLICKHOUSE_PASSWORD: 'dev_password_only'
+      HAPI_FHIR_URL: 'hapi-fhir'
+      HAPI_FHIR_PORT: 8080
+      MAX_RETIRES: 10
+      AXIOS_TIMEOUT: 300000
+
+networks:
+  hapi-fhir:
+    name: hapi-fhir_public
+    external: true
+  clickhouse:
+    name: clickhouse_public
+    external: true
