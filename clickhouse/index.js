@@ -206,6 +206,46 @@ export async function deleteResourceForId(resourceType, resourceId) {
   }
 }
 
+export async function getPatientIdsforFacility(healthFacilityId) {
+  try {
 
+    const query = `
+    SELECT DISTINCT id
+    FROM raw.patient
+    WHERE managingOrganization.reference = ['Organization/${healthFacilityId}']`;
 
- 
+    const rows = await clickhouse.query({
+      query,
+      format: 'JSONEachRow'
+    });
+    console.log(`Successfully retrieved patient ids for ['Organization/${healthFacilityId}']`);
+    
+    const result = await rows.json();
+    return result.map(row => row.id);
+  } catch (err) {
+    console.error(`Failed to retrieve patient ids for ['Organization/${healthFacilityId}']`, err);
+    throw err;
+  }
+}
+
+export async function getResourcesForPatient(patientId, resourceType, endDate) {
+  try {
+    const query = `
+    SELECT DISTINCT id
+    FROM raw.${resourceType}
+    WHERE subject.reference = ['Patient/${patientId}']
+    and inserted_at <= '${endDate}'`;
+
+    const rows = await clickhouse.query({
+      query: query,
+      format: 'JSONEachRow'
+    });
+    console.log(`Successfully retrieved ${resourceType} ids for ['Patient/${patientId}']`);
+
+    const result = await rows.json();
+    return result.map(row => row.id);
+  } catch (err) {
+    console.error(`Failed to retrieve ${resourceType} ids for ['Patient/${patientId}']`, err);
+    throw err;
+  }
+}

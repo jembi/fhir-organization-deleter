@@ -11,8 +11,10 @@
     "2:finalize:docker": "docker stack deploy -c ./docker/2-finalizer-docker-compose.yml organization-deleter",
     "3:expunge": "node 3-expunge.js",
     "3:expunge:docker": "docker stack deploy -c ./docker/3-expunge-docker-compose.yml organization-deleter",
-    "4:checker": "node 4-checker.js",
-    "4:checker:docker": "docker stack deploy -c ./docker/4-checker-docker-compose.yml patient-resource-checker"
+    "4:retrieve-clickhouse": "node 4-retrieve-clickhouse.js",
+    "4:retrieve-clickhouse:docker": "docker stack deploy -c ./docker/4-retrieve-clickhouse-docker-compose.yml retrieve-clickhouse",
+    "5:delete-clickhouse": "node 5-delete-clickhouse.js",
+    "5:delete-clickhouse:docker": "docker stack deploy -c ./docker/5-delete-clickhouse-docker-compose.yml delete-clickhouse"
   },
   "author": "Arran Standish",
   "license": "ISC",

@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  check-resources:
+  delete-clickhouse-resources:
     image: node:18-alpine
     networks:
       hapi-fhir:
@@ -15,10 +15,12 @@ services:
       placement:
         constraints:
           - "node.labels.name==node-1"
-    command: sh -c "cd /app && npm run 4:checker"
+    command: sh -c "cd /app && npm run 5:delete-clickhouse"
     volumes:
       - ../:/app
     environment:
+      FACILITY_ID: '90e0848e-0674-4f3d-af15-8b2f43530453'
+      PATIENT_ID_FILENAME: 'patient-ids.csv'
       OUTPUT_PATH: './output'
       RESOURCE_ID_FILENAME: 'ids.csv'
       CLICKHOUSE_URL: 'http://analytics-datastore-clickhouse-01:8123'
