@@ -287,3 +287,45 @@ export async function expungeResource(resource, retries = 0) {
     throw err;
   }
 }
+
+export async function doesResourceExist(resourceType, resourceId, retries = 0) {
+  // Add input validation
+  if (!resourceType || !resourceId) {
+    throw new Error('Missing required parameters: resourceType or resourceId');
+  }
+
+  // Add max retries constant
+  const MAX_RETRIES = Number(process.env.MAX_RETRIES || 10);
+  
+  try {
+    const response = await axiosInstance.get(
+      `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resourceType}/${resourceId}`,
+      {
+        params: {
+          _elements: 'id'
+        }
+      }
+    );
+    
+    return response.status === 200;
+  } catch (err) {
+    // Handle timeouts with retries
+    if (err.code === 'ECONNABORTED' && retries < MAX_RETRIES) {
+      console.warn(`Timeout checking resource ${resourceType}/${resourceId}, retrying... (Attempt ${retries + 1})`);
+      // Add exponential backoff
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 100));
+      return doesResourceExist(resourceType, resourceId, retries + 1);
+    }
+
+    // Resource not found or deleted
+    if (err.response && (err.response.status === 404 || err.response.status === 410)) {
+      console.log(`Resource ${resourceType}/${resourceId} not found or deleted`);
+      return false;
+    }
+
+    // Log other errors and re-throw
+    console.error(`Error checking resource ${resourceType}/${resourceId}:`, err.message);
+    throw err;
+  }
+}
+

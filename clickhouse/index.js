@@ -183,3 +183,70 @@ export async function deleteClickhouseRawResources(resources) {
     throw err;
   }
 }
+
+export async function deleteResourceForId(resourceType, resourceId) {
+  try {
+    // Convert resourceType to match table naming convention
+    const tableName = resourceTypeMap[resourceType.toLowerCase()] || resourceType.toLowerCase();
+    
+    const query = `
+      ALTER TABLE raw.${tableName}
+      DELETE WHERE id = '${resourceId}'
+    `;
+
+    await clickhouse.query({
+      query,
+      format: 'JSONEachRow'
+    });
+    
+    console.log(`Successfully deleted ${resourceType}/${resourceId}`);
+  } catch (err) {
+    console.error(`Failed to delete ${resourceType}/${resourceId}:`, err);
+    throw err;
+  }
+}
+
+export async function getPatientIdsforFacility(healthFacilityId) {
+  try {
+
+    const query = `
+    SELECT DISTINCT id
+    FROM raw.patient
+    WHERE managingOrganization.reference = ['Organization/${healthFacilityId}']`;
+
+    const rows = await clickhouse.query({
+      query,
+      format: 'JSONEachRow'
+    });
+    console.log(`Successfully retrieved patient ids for ['Organization/${healthFacilityId}']`);
+    
+    const result = await rows.json();
+    return result.map(row => row.id);
+  } catch (err) {
+    console.error(`Failed to retrieve patient ids for ['Organization/${healthFacilityId}']`, err);
+    throw err;
+  }
+}
+
+export async function getResourcesForPatient(patientId, resourceType, startDate, endDate) {
+  try {
+    const query = `
+    SELECT DISTINCT id
+    FROM raw.${resourceType}
+    WHERE subject.reference = ['Patient/${patientId}']
+    and inserted_at >= '${startDate}'
+    and inserted_at <= '${endDate}'`;
+
+    const rows = await clickhouse.query({
+      query: query,
+      format: 'JSONEachRow'
+    });
+    console.log(`Successfully retrieved ${resourceType} ids for ['Patient/${patientId}']`);
+
+    const result = await rows.json();
+    return result.map(row => row.id);
+  } catch (err) {
+    console.error(`Failed to retrieve ${resourceType} ids for ['Patient/${patientId}']`, err);
+    throw err;
+  }
+}
