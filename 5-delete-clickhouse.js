@@ -1,9 +1,9 @@
-import fs from 'fs';
+import { createReadStream } from 'fs';
 import readline from 'readline';
 import './env/index.js';
 import { doesResourceExist } from './fhir/index.js';
 import { deleteResourceForId} from './clickhouse/index.js';
-import { readResourceIdsFromCsv, doesFileExist, flushCursor } from './filesystem/index.js';
+import { doesFileExist, flushCursor, writePatientId } from './filesystem/index.js';
 
 const PATH_PREFIX = process.env.OUTPUT_PATH || './output';
 const RESOURCE_ID_FILENAME = process.env.RESOURCE_ID_FILENAME || 'ids.csv';
@@ -27,13 +27,15 @@ async function main() {
       continue;
     }
 
-    const resourceIds = await readResourceIdsFromCsv(filePath);
-    console.log(`Processing ${resourceIds.length} resources for type ${resourceTypes[resourceType]}`);
+    const resourceIdsReader = readline.createInterface({
+      input: createReadStream(filePath)
+    });
 
-    for(const id of resourceIds) {
+    for await (const id of resourceIdsReader) {
       const resourceExists = await doesResourceExist(resourceTypes[resourceType], id);
       if(!resourceExists) {
         await deleteResourceForId(tableNames[resourceType], id);
+        await writePatientId(id, `deleted-${tableNames[resourceType]}-${RESOURCE_ID_FILENAME}`);
       }
     }
   }
