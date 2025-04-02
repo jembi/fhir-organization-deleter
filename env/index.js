@@ -14,3 +14,4 @@ if (!process.env.MAX_RETIRES) process.env.MAX_RETIRES = 10;
 if (!process.env.AXIOS_TIMEOUT) process.env.AXIOS_TIMEOUT = 60000;
 if (!process.env.RESOURCE_ID_FILENAME) process.env.RESOURCE_ID_FILENAME = 'ids.csv';
 if (!process.env.END_DATE) process.env.END_DATE = '2025-04-02';
+if (!process.env.START_DATE) process.env.START_DATE = '1970-01-01';

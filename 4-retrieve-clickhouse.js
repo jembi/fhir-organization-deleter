@@ -7,6 +7,7 @@ const RESOURCE_ID_FILENAME = process.env.RESOURCE_ID_FILENAME || 'ids.csv';
 const HEALTH_FACILITY_ID = process.env.FACILITY_ID || '90e0848e-0674-4f3d-af15-8b2f43530453';
 const PATIENT_ID_FILENAME = process.env.PATIENT_ID_FILENAME || 'patient-ids.csv';
 const END_DATE = process.env.END_DATE || '2024-10-01';
+const START_DATE = process.env.START_DATE || '1970-01-01';
 
 const tableNames = ['care_plan', 'diagnostic_report', 'encounter', 'medication_dispense', 'medication_statement',
   'observation', 'procedure', 'questionnaire_response', 'service_request'];
@@ -31,7 +32,7 @@ async function main() {
     let resourceIds = [];
 
     for(const patientId of patientIds) {
-      resources = await getResourcesForPatient(patientId, tableNames[resourceType], END_DATE);
+      resources = await getResourcesForPatient(patientId, tableNames[resourceType], START_DATE, END_DATE);
       resourceIds = resourceIds.concat(resources);
       console.log(`Found ${resources.length} ${resourceTypes[resourceType]} resources for patient ${patientId}`);
     }

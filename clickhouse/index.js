@@ -228,12 +228,13 @@ export async function getPatientIdsforFacility(healthFacilityId) {
   }
 }
 
-export async function getResourcesForPatient(patientId, resourceType, endDate) {
+export async function getResourcesForPatient(patientId, resourceType, startDate, endDate) {
   try {
     const query = `
     SELECT DISTINCT id
     FROM raw.${resourceType}
     WHERE subject.reference = ['Patient/${patientId}']
+    and inserted_at >= '${startDate}'
     and inserted_at <= '${endDate}'`;
 
     const rows = await clickhouse.query({
