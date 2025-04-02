@@ -2,11 +2,10 @@ import fs from 'fs';
 import readline from 'readline';
 import './env/index.js';
 import { doesResourceExist } from './fhir/index.js';
-import { updateResourceDeletedAt} from './clickhouse/index.js';
+import { deleteResourceForId} from './clickhouse/index.js';
 import { readResourceIdsFromCsv, doesFileExist, flushCursor } from './filesystem/index.js';
 
 const PATH_PREFIX = process.env.OUTPUT_PATH || './output';
-const DELETED_AT = process.env.DELETED_AT || '2025-01-01';
 const RESOURCE_ID_FILENAME = process.env.RESOURCE_ID_FILENAME || 'ids.csv';
 
 const tableNames = ['care_plan', 'diagnostic_report', 'encounter', 'medication_dispense', 'medication_statement',
@@ -34,7 +33,7 @@ async function main() {
     for(const id of resourceIds) {
       const resourceExists = await doesResourceExist(resourceTypes[resourceType], id);
       if(!resourceExists) {
-        await updateResourceDeletedAt(tableNames[resourceType], id, DELETED_AT);
+        await deleteResourceForId(tableNames[resourceType], id);
       }
     }
   }

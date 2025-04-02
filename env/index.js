@@ -12,3 +12,4 @@ if (!process.env.FAILED_PATIENT_FILENAME) process.env.FAILED_PATIENT_FILENAME = 
 if (!process.env.DELETED_RESOURCE_FILENAME) process.env.DELETED_RESOURCE_FILENAME = 'deleted-resources.csv';
 if (!process.env.MAX_RETIRES) process.env.MAX_RETIRES = 10;
 if (!process.env.AXIOS_TIMEOUT) process.env.AXIOS_TIMEOUT = 60000;
+if (!process.env.RESOURCE_ID_FILENAME) process.env.RESOURCE_ID_FILENAME = 'ids.csv';

@@ -20,8 +20,7 @@ services:
       - ../:/app
     environment:
       OUTPUT_PATH: './output'
-      RESOURCE_ID_FILENAME: 'resource-ids.csv'
-      DELETED_AT: '2025-01-01'
+      RESOURCE_ID_FILENAME: 'ids.csv'
       CLICKHOUSE_URL: 'http://analytics-datastore-clickhouse-01:8123'
       CLICKHOUSE_USERNAME: 'default'
       CLICKHOUSE_PASSWORD: 'dev_password_only'
