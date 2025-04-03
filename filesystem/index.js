@@ -1,7 +1,10 @@
 import { parse } from 'csv-parse';
 import { createReadStream, writeFile, access, constants, createWriteStream, existsSync } from 'fs';
+import { join } from 'path';
 
 const PATH_PREFIX = process.env.OUTPUT_PATH || './output';
+
+const writeStreams = new Map();
 
 export async function writePatientId(id, fileName) {
   if (!writePatientId[fileName]) writePatientId[fileName] = createWriteStream(`${PATH_PREFIX}/${fileName}`);
@@ -93,4 +96,63 @@ export async function readResourceIdsFromCsv(filePath) {
     console.error('Failed to read resource IDs from CSV:', err);
     throw err;
   }
+}
+
+export async function bulkWriteResourceIds(ids, fileName) {
+  try {
+    if (!ids || ids.length === 0) {
+      console.warn('No IDs provided to write');
+      return;
+    }
+
+    // Get or create write stream
+    let writeStream = writeStreams.get(fileName);
+    if (!writeStream) {
+      const filePath = join(PATH_PREFIX, fileName);
+      writeStream = createWriteStream(filePath);
+      writeStreams.set(fileName, writeStream);
+      
+      // Write header for new file
+      await new Promise((resolve, reject) => {
+        writeStream.write('id\n', (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    }
+
+    // Write all IDs in bulk
+    const content = ids.map(id => `${id}\n`).join('');
+    await new Promise((resolve, reject) => {
+      writeStream.write(content, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
+  } catch (err) {
+    console.error(`Error bulk writing IDs to file ${fileName}:`, err);
+    throw err;
+  }
+}
+
+// Clean up function to close all write streams
+export async function closeWriteStreams() {
+  const closePromises = [];
+  for (const [fileName, stream] of writeStreams) {
+    closePromises.push(
+      new Promise((resolve, reject) => {
+        stream.end((err) => {
+          if (err) {
+            console.error(`Error closing stream for ${fileName}:`, err);
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      })
+    );
+  }
+  await Promise.all(closePromises);
+  writeStreams.clear();
 }

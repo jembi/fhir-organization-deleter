@@ -329,3 +329,17 @@ export async function doesResourceExist(resourceType, resourceId, retries = 0) {
   }
 }
 
+export async function getHapiFhirResourcesForPatient(patientId, resourceType, startDate, endDate) {
+  const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resourceType}?patient=${patientId}&_lastUpdated=gt${startDate}&_lastUpdated=lt${endDate}&_elements=id&_count=2000`;
+  try {
+    const response = await axiosInstance.get(url);
+    if (!response.data.entry) {
+      //console.log(`Patient - ${patientId} had no ${resourceType} resources.`);
+      return [];
+    }
+    return response.data.entry.map(entry => entry.resource.id);
+  } catch (err) {
+    console.error(`Failed to retrieve ${resourceType} resources for patient ${patientId}:`, err);
+    throw err;
+  }
+}
