@@ -241,12 +241,37 @@ export async function getResourcesForPatient(patientId, resourceType, startDate,
       query: query,
       format: 'JSONEachRow'
     });
-    console.log(`Successfully retrieved ${resourceType} ids for ['Patient/${patientId}']`);
 
     const result = await rows.json();
     return result.map(row => row.id);
   } catch (err) {
     console.error(`Failed to retrieve ${resourceType} ids for ['Patient/${patientId}']`, err);
+    throw err;
+  }
+}
+
+export async function bulkDeleteResourcesForIds(tableName, ids) {
+  try {
+    if (!tableName || !ids || ids.length === 0) {
+      throw new Error('Missing required parameters: tableName or ids');
+    }
+    // Perform the bulk delete
+    const deleteQuery = `
+      ALTER TABLE raw.${tableName}
+      DELETE WHERE id IN (${ids.map(id => `'${id}'`).join(',')})
+    `;
+
+    await clickhouse.query({
+      query: deleteQuery,
+      format: 'JSONEachRow'
+    });
+
+    console.log(`Successfully deleted ${ids.length} resources from ${tableName}`);
+    return true;
+
+  } catch (err) {
+    console.error(`Failed to bulk delete resources from ${tableName}:`, err);
+    console.error(ids.length);
     throw err;
   }
 }
