@@ -6,7 +6,7 @@ import { doesFileExist, flushCursor, bulkWriteResourceIds, closeWriteStreams } f
 
 const PATH_PREFIX = process.env.OUTPUT_PATH || './output';
 const RESOURCE_ID_FILENAME = process.env.RESOURCE_ID_FILENAME || 'ids.csv';
-const BATCH_SIZE = process.env.BATCH_SIZE || 1000;
+const BATCH_SIZE = Number(process.env.BATCH_SIZE) || 1000;
 
 const tableNames = ['care_plan', 'diagnostic_report', 'encounter', 'medication_dispense', 'medication_statement',
   'observation', 'procedure', 'questionnaire_response', 'service_request'];
@@ -18,8 +18,6 @@ async function main() {
   const start = new Date().getTime();
   console.log(`${new Date().toISOString()} - starting processing`);
   
-
-
   for(const resourceType in resourceTypes) {
     const filePath = `${PATH_PREFIX}/${tableNames[resourceType]}-${RESOURCE_ID_FILENAME}`;
     

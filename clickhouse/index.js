@@ -255,30 +255,10 @@ export async function bulkDeleteResourcesForIds(tableName, ids) {
     if (!tableName || !ids || ids.length === 0) {
       throw new Error('Missing required parameters: tableName or ids');
     }
-
-    // First check if resources exist
-    const checkQuery = `
-      SELECT id 
-      FROM raw.${tableName} 
-      WHERE id IN (${ids.map(id => `'${id}'`).join(',')})
-    `;
-
-    const checkResult = await clickhouse.query({
-      query: checkQuery,
-      format: 'JSONEachRow'
-    });
-
-    const existingIds = (await checkResult.json()).map(row => row.id);
-    if (existingIds.length === 0) {
-      console.warn(`No resources found in table ${tableName} for the provided IDs`);
-      return false;
-    }
-
     // Perform the bulk delete
     const deleteQuery = `
       ALTER TABLE raw.${tableName}
-      DELETE WHERE id IN (${existingIds.map(id => `'${id}'`).join(',')})
-      SETTINGS mutations_sync = 1
+      DELETE WHERE id IN (${ids.map(id => `'${id}'`).join(',')})
     `;
 
     await clickhouse.query({
@@ -286,11 +266,12 @@ export async function bulkDeleteResourcesForIds(tableName, ids) {
       format: 'JSONEachRow'
     });
 
-    console.log(`Successfully deleted ${existingIds.length} resources from ${tableName}`);
+    console.log(`Successfully deleted ${ids.length} resources from ${tableName}`);
     return true;
 
   } catch (err) {
     console.error(`Failed to bulk delete resources from ${tableName}:`, err);
+    console.error(ids.length);
     throw err;
   }
 }

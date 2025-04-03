@@ -1,5 +1,5 @@
 import './env/index.js';
-import { getHapiFhirResourcesForPatient } from './fhir/index.js';
+import { getHapiFhirResourcesForPatientWithPagination } from './fhir/index.js';
 import { getPatientIdsforFacility, getResourcesForPatient } from './clickhouse/index.js';
 import { flushCursor, bulkWriteResourceIds } from './filesystem/index.js';
 
@@ -8,6 +8,7 @@ const HEALTH_FACILITY_ID = process.env.FACILITY_ID || '90e0848e-0674-4f3d-af15-8
 const PATIENT_ID_FILENAME = process.env.PATIENT_ID_FILENAME || 'patient-ids.csv';
 const END_DATE = process.env.END_DATE || '2024-10-01';
 const START_DATE = process.env.START_DATE || '1970-01-01';
+const COUNT = process.env.COUNT || 2000;
 
 const tableNames = ['care_plan', 'diagnostic_report', 'encounter', 'medication_dispense', 'medication_statement',
   'observation', 'procedure', 'questionnaire_response', 'service_request'];
@@ -38,7 +39,7 @@ async function main() {
     let hapiFhirResources = [];
     for(const patientId of patientIds) {
       // Filter out resources that already exist in the Hapi FHIR server
-      const resources = await getHapiFhirResourcesForPatient(patientId, resourceTypes[resourceType], START_DATE, END_DATE);
+      const resources = await getHapiFhirResourcesForPatientWithPagination(patientId, resourceTypes[resourceType], START_DATE, END_DATE, COUNT);
       if (resources.length > 0) {
         hapiFhirResources = hapiFhirResources.concat(resources);
       }
