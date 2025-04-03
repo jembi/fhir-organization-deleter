@@ -241,12 +241,56 @@ export async function getResourcesForPatient(patientId, resourceType, startDate,
       query: query,
       format: 'JSONEachRow'
     });
-    console.log(`Successfully retrieved ${resourceType} ids for ['Patient/${patientId}']`);
 
     const result = await rows.json();
     return result.map(row => row.id);
   } catch (err) {
     console.error(`Failed to retrieve ${resourceType} ids for ['Patient/${patientId}']`, err);
+    throw err;
+  }
+}
+
+export async function bulkDeleteResourcesForIds(tableName, ids) {
+  try {
+    if (!tableName || !ids || ids.length === 0) {
+      throw new Error('Missing required parameters: tableName or ids');
+    }
+
+    // First check if resources exist
+    const checkQuery = `
+      SELECT id 
+      FROM raw.${tableName} 
+      WHERE id IN (${ids.map(id => `'${id}'`).join(',')})
+    `;
+
+    const checkResult = await clickhouse.query({
+      query: checkQuery,
+      format: 'JSONEachRow'
+    });
+
+    const existingIds = (await checkResult.json()).map(row => row.id);
+    if (existingIds.length === 0) {
+      console.warn(`No resources found in table ${tableName} for the provided IDs`);
+      return false;
+    }
+
+    // Perform the bulk delete
+    const deleteQuery = `
+      ALTER TABLE raw.${tableName}
+      DELETE WHERE id IN (${existingIds.map(id => `'${id}'`).join(',')})
+      SETTINGS mutations_sync = 1
+    `;
+
+    await clickhouse.query({
+      query: deleteQuery,
+      format: 'JSONEachRow'
+    });
+
+    console.log(`Successfully deleted ${existingIds.length} resources from ${tableName}`);
+    return true;
+
+  } catch (err) {
+    console.error(`Failed to bulk delete resources from ${tableName}:`, err);
     throw err;
   }
 }
