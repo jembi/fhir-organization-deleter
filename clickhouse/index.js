@@ -258,7 +258,8 @@ export async function bulkDeleteResourcesForIds(tableName, ids) {
     // Perform the bulk delete
     const deleteQuery = `
       ALTER TABLE raw.${tableName}
-      DELETE WHERE id IN (${ids.map(id => `'${id}'`).join(',')})
+      UPDATE deleted_at = now()
+      WHERE id IN (${ids.map(id => `'${id}'`).join(',')})
     `;
 
     await clickhouse.query({
