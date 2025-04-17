@@ -7,7 +7,7 @@ const clickhouse = createClient({
   password: process.env.CLICKHOUSE_PASSWORD || 'dev_password_only',
 });
 
-const resourceTypeMap = {
+export const resourceTypeMap = {
     medicationdispense: 'medication_dispense',
     careplan: 'care_plan',
     diagnosticreport: 'diagnostic_report',

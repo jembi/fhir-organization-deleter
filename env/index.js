@@ -17,3 +17,4 @@ if (!process.env.END_DATE) process.env.END_DATE = '2025-04-04';
 if (!process.env.START_DATE) process.env.START_DATE = '2025-04-01';
 if (!process.env.BATCH_SIZE) process.env.BATCH_SIZE = 500;
 if (!process.env.COUNT) process.env.COUNT = 5;
+if (!process.env.BUNDLE_FILE) process.env.BUNDLE_FILE = './6800e06fff556743f77c3622_request.json';
