@@ -1,4 +1,4 @@
-if (!process.env.FACILITY_ID) process.env.FACILITY_ID = '90e0848e-0674-4f3d-af15-8b2f43530453';
+if (!process.env.FACILITY_ID) process.env.FACILITY_ID = 'b6e9f3f4307c4d12914a4ceba24f9217';
 if (!process.env.CLICKHOUSE_URL) process.env.CLICKHOUSE_URL = 'http://localhost:8124'
 if (!process.env.CLICKHOUSE_USERNAME) process.env.CLICKHOUSE_USERNAME = 'default';
 if (!process.env.CLICKHOUSE_PASSWORD) process.env.CLICKHOUSE_PASSWORD = 'dev_password_only';
@@ -13,5 +13,8 @@ if (!process.env.DELETED_RESOURCE_FILENAME) process.env.DELETED_RESOURCE_FILENAM
 if (!process.env.MAX_RETIRES) process.env.MAX_RETIRES = 10;
 if (!process.env.AXIOS_TIMEOUT) process.env.AXIOS_TIMEOUT = 60000;
 if (!process.env.RESOURCE_ID_FILENAME) process.env.RESOURCE_ID_FILENAME = 'ids.csv';
-if (!process.env.END_DATE) process.env.END_DATE = '2025-04-02';
-if (!process.env.START_DATE) process.env.START_DATE = '1970-01-01';
+if (!process.env.END_DATE) process.env.END_DATE = '2025-04-04';
+if (!process.env.START_DATE) process.env.START_DATE = '2025-04-01';
+if (!process.env.BATCH_SIZE) process.env.BATCH_SIZE = 500;
+if (!process.env.COUNT) process.env.COUNT = 5;
+if (!process.env.BUNDLE_FILE) process.env.BUNDLE_FILE = './6800e06fff556743f77c3622_request.json';

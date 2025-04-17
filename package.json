@@ -14,7 +14,9 @@
     "4:retrieve-clickhouse": "node 4-retrieve-clickhouse.js",
     "4:retrieve-clickhouse:docker": "docker stack deploy -c ./docker/4-retrieve-clickhouse-docker-compose.yml retrieve-clickhouse",
     "5:delete-clickhouse": "node 5-delete-clickhouse.js",
-    "5:delete-clickhouse:docker": "docker stack deploy -c ./docker/5-delete-clickhouse-docker-compose.yml delete-clickhouse"
+    "5:delete-clickhouse:docker": "docker stack deploy -c ./docker/5-delete-clickhouse-docker-compose.yml delete-clickhouse",
+    "6:delete-from-bundle": "node 6-delete-from-bundle.js",
+    "6:delete-from-bundle:docker": "docker stack deploy -c ./docker/6-delete-from-bundle-docker-compose.yml delete-from-bundle"
   },
   "author": "Arran Standish",
   "license": "ISC",

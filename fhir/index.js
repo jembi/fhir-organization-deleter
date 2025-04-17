@@ -329,3 +329,46 @@ export async function doesResourceExist(resourceType, resourceId, retries = 0) {
   }
 }
 
+export async function getHapiFhirResourcesForPatient(patientId, resourceType, startDate, endDate) {
+  const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resourceType}?patient=${patientId}&_lastUpdated=gt${startDate}&_lastUpdated=lt${endDate}&_elements=id&_count=2000`;
+  try {
+    const response = await axiosInstance.get(url);
+    if (!response.data.entry) {
+      //console.log(`Patient - ${patientId} had no ${resourceType} resources.`);
+      return [];
+    }
+    return response.data.entry.map(entry => entry.resource.id);
+  } catch (err) {
+    console.error(`Failed to retrieve ${resourceType} resources for patient ${patientId}:`, err);
+    throw err;
+  }
+}
+
+export async function getHapiFhirResourcesForPatientWithPagination(patientId, resourceType, startDate, endDate, count) {
+  const url = `http://${process.env.HAPI_FHIR_URL}:${process.env.HAPI_FHIR_PORT}/fhir/${resourceType}?patient=${patientId}&_lastUpdated=gt${startDate}&_lastUpdated=lt${endDate}&_elements=id&_count=${count}`;
+  try {
+    const response = await axiosInstance.get(url);
+
+    if (!response.data.entry) {
+      return [];
+    }
+
+    const ids = response.data.entry.map(entry => entry.resource.id)
+
+    if (ids.length == count) {
+      console.log(`Found ${ids.length} ${resourceType} resources for patient ${patientId} in Hapi FHIR, splitting into two halves`);
+      const dt1 = new Date(startDate).getTime();
+      const dt2 = new Date(endDate).getTime();
+      const midDate = new Date((dt2+dt1)/2).toISOString().split('T')[0];
+
+      const idsBottom = await getHapiFhirResourcesForPatient(patientId, resourceType, startDate, midDate);
+      const idsTop = await getHapiFhirResourcesForPatient(patientId, resourceType, midDate, endDate);
+
+      return [...idsBottom, ...idsTop]
+    }
+    return ids;
+  } catch (err) {
+    console.error(`Failed to retrieve ${resourceType} resources for patient ${patientId}:`, err);
+    throw err;
+  }
+}
