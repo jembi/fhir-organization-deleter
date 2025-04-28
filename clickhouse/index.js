@@ -250,7 +250,7 @@ export async function getResourcesForPatient(patientId, resourceType, startDate,
   }
 }
 
-export async function bulkDeleteResourcesForIds(tableName, ids) {
+export async function bulkDeleteResourcesForIds(tableName, ids, startDate, endDate) {
   try {
     if (!tableName || !ids || ids.length === 0) {
       throw new Error('Missing required parameters: tableName or ids');
@@ -258,9 +258,9 @@ export async function bulkDeleteResourcesForIds(tableName, ids) {
     // Perform the bulk delete
     const deleteQuery = `
       ALTER TABLE raw.${tableName}
-      UPDATE deleted_at = now()
-      WHERE id IN (${ids.map(id => `'${id}'`).join(',')})
-    `;
+      DELETE WHERE id IN (${ids.map(id => `'${id}'`).join(',')})
+      and inserted_at >= '${startDate}'
+      and inserted_at <= '${endDate}'`;
 
     await clickhouse.query({
       query: deleteQuery,

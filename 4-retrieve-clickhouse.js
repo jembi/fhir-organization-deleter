@@ -9,6 +9,7 @@ const PATIENT_ID_FILENAME = process.env.PATIENT_ID_FILENAME || 'patient-ids.csv'
 const END_DATE = process.env.END_DATE || '2024-10-01';
 const START_DATE = process.env.START_DATE || '1970-01-01';
 const COUNT = process.env.COUNT || 2000;
+const FILTER_HAPI_FHIR = process.env.FILTER_HAPI_FHIR === 'true';
 
 const tableNames = ['care_plan', 'diagnostic_report', 'encounter', 'medication_dispense', 'medication_statement',
   'observation', 'procedure', 'questionnaire_response', 'service_request'];
@@ -37,20 +38,37 @@ async function main() {
     console.log(`Found ${resourceIds.length} ${resourceTypes[resourceType]} resources for all patients in clickhouse`);
 
     let hapiFhirResources = [];
-    for(const patientId of patientIds) {
-      // Filter out resources that already exist in the Hapi FHIR server
-      const resources = await getHapiFhirResourcesForPatientWithPagination(patientId, resourceTypes[resourceType], START_DATE, END_DATE, COUNT);
-      if (resources.length > 0) {
-        hapiFhirResources = hapiFhirResources.concat(resources);
-      }
-    }
-    for(const resource of hapiFhirResources) {
-      if(resourceIds.includes(resource)) {
-        resourceIds.splice(resourceIds.indexOf(resource), 1);
-      }
-    }
 
-    console.log(`Found ${hapiFhirResources.length} ${resourceTypes[resourceType]} resources to write for all patients in Hapi FHIR`);
+    if (FILTER_HAPI_FHIR) {
+      console.log('HAPI FHIR filtering enabled - checking for existing resources');
+      
+      for(const patientId of patientIds) {
+        // Filter out resources that already exist in the Hapi FHIR server
+        const resources = await getHapiFhirResourcesForPatientWithPagination(
+          patientId, 
+          resourceTypes[resourceType], 
+          START_DATE, 
+          END_DATE, 
+          COUNT
+        );
+        
+        if (resources.length > 0) {
+          hapiFhirResources = hapiFhirResources.concat(resources);
+        }
+      }
+
+      // Remove existing resources from resourceIds
+      for(const resource of hapiFhirResources) {
+        if(resourceIds.includes(resource)) {
+          resourceIds.splice(resourceIds.indexOf(resource), 1);
+        }
+      }
+
+      console.log(`Found ${hapiFhirResources.length} existing ${resourceTypes[resourceType]} resources in Hapi FHIR`);
+      console.log(`${resourceIds.length} resources remaining after filtering`);
+    } else {
+      console.log('HAPI FHIR filtering disabled - processing all resources');
+    }
 
     await bulkWriteResourceIds(resourceIds, `${tableNames[resourceType]}-${RESOURCE_ID_FILENAME}`);
     console.log(`Wrote ${resourceIds.length} ${resourceTypes[resourceType]} resources to ${tableNames[resourceType]}-${RESOURCE_ID_FILENAME}`);
