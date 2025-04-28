@@ -33,6 +33,7 @@ services:
       END_DATE: '2024-10-01'
       START_DATE: '1970-01-01'
       COUNT: 2000
+      FILTER_HAPI_FHIR: 'false'
 networks:
   hapi-fhir:
     name: hapi-fhir_public

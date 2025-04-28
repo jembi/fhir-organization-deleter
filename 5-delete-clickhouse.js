@@ -7,6 +7,8 @@ import { doesFileExist, flushCursor, bulkWriteResourceIds, closeWriteStreams } f
 const PATH_PREFIX = process.env.OUTPUT_PATH || './output';
 const RESOURCE_ID_FILENAME = process.env.RESOURCE_ID_FILENAME || 'ids.csv';
 const BATCH_SIZE = Number(process.env.BATCH_SIZE) || 1000;
+const START_DATE = process.env.START_DATE || '2025-04-01';
+const END_DATE = process.env.END_DATE || '2025-04-04';
 
 const tableNames = ['care_plan', 'diagnostic_report', 'encounter', 'medication_dispense', 'medication_statement',
   'observation', 'procedure', 'questionnaire_response', 'service_request'];
@@ -40,7 +42,7 @@ async function main() {
     for (let i = 0; i < resourceIds.length; i += BATCH_SIZE) {
       const batch = resourceIds.slice(i, i + BATCH_SIZE);
       
-      const success = await bulkDeleteResourcesForIds(tableNames[resourceType], batch);
+      const success = await bulkDeleteResourcesForIds(tableNames[resourceType], batch, START_DATE, END_DATE);
       if (success) {
         console.log(`Deleted ${batch.length} ${resourceTypes[resourceType]} resources from clickhouse`);
         // Bulk write deleted IDs to file

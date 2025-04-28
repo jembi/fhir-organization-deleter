@@ -13,8 +13,9 @@ if (!process.env.DELETED_RESOURCE_FILENAME) process.env.DELETED_RESOURCE_FILENAM
 if (!process.env.MAX_RETIRES) process.env.MAX_RETIRES = 10;
 if (!process.env.AXIOS_TIMEOUT) process.env.AXIOS_TIMEOUT = 60000;
 if (!process.env.RESOURCE_ID_FILENAME) process.env.RESOURCE_ID_FILENAME = 'ids.csv';
-if (!process.env.END_DATE) process.env.END_DATE = '2025-04-04';
-if (!process.env.START_DATE) process.env.START_DATE = '2025-04-01';
+if (!process.env.END_DATE) process.env.END_DATE = '2025-04-28 04:49:59';
+if (!process.env.START_DATE) process.env.START_DATE = '2025-04-28 04:49:00';
 if (!process.env.BATCH_SIZE) process.env.BATCH_SIZE = 500;
 if (!process.env.COUNT) process.env.COUNT = 5;
 if (!process.env.BUNDLE_FILE) process.env.BUNDLE_FILE = './6800e06fff556743f77c3622_request.json';
+if (!process.env.FILTER_HAPI_FHIR) process.env.FILTER_HAPI_FHIR = 'false';
