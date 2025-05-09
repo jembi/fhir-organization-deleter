@@ -73,7 +73,7 @@ async function main() {
     console.warn('Skipping orgainzation deleting as there is at least 1 failed patient');
   } else {
     await deleteResource(`Organization/${healthFacilityId}`);
-    await deleteElasticRawResources([`Organization/${healthFacilityId}`]);
+    await deleteElasticRawResources([{resource: {resourceType: 'Organization', id: `${healthFacilityId}`}}]);
     await deleteClickhouseRawResources([`Organization/${healthFacilityId}`]);
   }
 
